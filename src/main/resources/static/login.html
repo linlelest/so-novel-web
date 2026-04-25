@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>SoNovel - 登录</title>
+  <style>
+    :root {
+      --primary: #5d5d81;
+      --primary-hover: #7b7b9d;
+      --bg: #f8f9fa;
+      --card-bg: #fff;
+      --text: #333;
+      --text-secondary: #666;
+      --border: #e5e5e5;
+      --error: #e74c3c;
+      --success: #27ae60;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .auth-container {
+      background: var(--card-bg);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      padding: 40px;
+      width: 100%;
+      max-width: 420px;
+    }
+    .logo {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .logo h1 {
+      font-size: 2rem;
+      color: var(--primary);
+      letter-spacing: 2px;
+      margin: 0;
+    }
+    .logo p {
+      color: var(--text-secondary);
+      margin-top: 8px;
+      font-size: 0.9rem;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--text);
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      font-size: 1rem;
+      transition: border-color 0.2s;
+      outline: none;
+    }
+    .form-group input:focus {
+      border-color: var(--primary);
+    }
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+    .btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .error-msg {
+      color: var(--error);
+      font-size: 0.85rem;
+      margin-top: 12px;
+      text-align: center;
+      display: none;
+    }
+    .success-msg {
+      color: var(--success);
+      font-size: 0.85rem;
+      margin-top: 12px;
+      text-align: center;
+      display: none;
+    }
+    .toggle-link {
+      text-align: center;
+      margin-top: 16px;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+    .toggle-link a {
+      color: var(--primary);
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .toggle-link a:hover {
+      text-decoration: underline;
+    }
+    .info-box {
+      background: #f0f9eb;
+      border: 1px solid #e1f3d8;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 24px;
+      text-align: center;
+      color: #529b2e;
+      font-size: 0.9rem;
+      display: none;
+    }
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-secondary);
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-container">
+    <div class="logo">
+      <h1>SO NOVEL</h1>
+      <p>网络小说下载与管理平台</p>
+    </div>
+
+    <div class="loading" id="loadingEl">加载中...</div>
+
+    <!-- 管理员注册 -->
+    <div id="adminRegisterForm" style="display:none">
+      <div class="info-box" id="firstRunInfo">🎉 首次使用！请注册管理员账号</div>
+      <div class="form-group">
+        <label>管理员用户名</label>
+        <input type="text" id="adminRegUsername" placeholder="输入管理员用户名" autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label>管理员密码</label>
+        <input type="password" id="adminRegPassword" placeholder="至少 6 个字符" autocomplete="new-password">
+      </div>
+      <button class="btn btn-primary" id="adminRegBtn">注册管理员</button>
+      <div class="error-msg" id="adminRegError"></div>
+      <div class="success-msg" id="adminRegSuccess"></div>
+    </div>
+
+    <!-- 登录 -->
+    <div id="loginForm" style="display:none">
+      <div class="form-group">
+        <label>用户名</label>
+        <input type="text" id="loginUsername" placeholder="输入用户名" autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label>密码</label>
+        <input type="password" id="loginPassword" placeholder="输入密码" autocomplete="current-password">
+      </div>
+      <button class="btn btn-primary" id="loginBtn">登 录</button>
+      <div class="error-msg" id="loginError"></div>
+      <div class="success-msg" id="loginSuccess"></div>
+      <div class="toggle-link">
+        还没有账号？<a id="goToRegister">立即注册</a>
+      </div>
+    </div>
+
+    <!-- 注册（普通用户） -->
+    <div id="registerForm" style="display:none">
+      <div class="form-group">
+        <label>用户名</label>
+        <input type="text" id="regUsername" placeholder="2-20 个字符" autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label>密码</label>
+        <input type="password" id="regPassword" placeholder="至少 4 个字符" autocomplete="new-password">
+      </div>
+      <button class="btn btn-primary" id="regBtn">注 册</button>
+      <div class="error-msg" id="regError"></div>
+      <div class="success-msg" id="regSuccess"></div>
+      <div class="toggle-link">
+        已有账号？<a id="goToLogin">返回登录</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const loadingEl = document.getElementById('loadingEl');
+    const adminRegisterForm = document.getElementById('adminRegisterForm');
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+
+    // 检查是否已有管理员
+    async function init() {
+      try {
+        const resp = await fetch('/api/auth/check-admin');
+        const data = await resp.json();
+        loadingEl.style.display = 'none';
+
+        if (!data.hasAdmin) {
+          // 没有管理员，显示管理员注册页面
+          adminRegisterForm.style.display = 'block';
+          document.getElementById('firstRunInfo').style.display = 'block';
+        } else {
+          // 有管理员，显示登录页面
+          loginForm.style.display = 'block';
+        }
+      } catch (e) {
+        loadingEl.textContent = '无法连接到服务器，请检查服务是否启动';
+        loadingEl.style.color = '#e74c3c';
+      }
+    }
+
+    // 登录
+    document.getElementById('loginBtn').addEventListener('click', async () => {
+      const username = document.getElementById('loginUsername').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      const errorEl = document.getElementById('loginError');
+      const successEl = document.getElementById('loginSuccess');
+
+      if (!username || !password) {
+        errorEl.textContent = '请输入用户名和密码';
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      try {
+        const resp = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await resp.json();
+
+        if (resp.ok) {
+          successEl.textContent = '登录成功，正在跳转...';
+          successEl.style.display = 'block';
+          errorEl.style.display = 'none';
+          setTimeout(() => { window.location.href = '/'; }, 500);
+        } else {
+          errorEl.textContent = data.message || '登录失败';
+          errorEl.style.display = 'block';
+          successEl.style.display = 'none';
+        }
+      } catch (e) {
+        errorEl.textContent = '网络错误';
+        errorEl.style.display = 'block';
+      }
+    });
+
+    // 回车登录
+    document.getElementById('loginPassword').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('loginBtn').click();
+    });
+
+    // 管理员注册
+    document.getElementById('adminRegBtn').addEventListener('click', async () => {
+      const username = document.getElementById('adminRegUsername').value.trim();
+      const password = document.getElementById('adminRegPassword').value;
+      const errorEl = document.getElementById('adminRegError');
+      const successEl = document.getElementById('adminRegSuccess');
+
+      if (!username || !password) {
+        errorEl.textContent = '请填写用户名和密码';
+        errorEl.style.display = 'block';
+        return;
+      }
+      if (password.length < 6) {
+        errorEl.textContent = '密码长度不能少于 6 个字符';
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      try {
+        const resp = await fetch('/api/auth/admin-register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await resp.json();
+
+        if (resp.ok) {
+          successEl.textContent = '管理员注册成功！正在跳转...';
+          successEl.style.display = 'block';
+          errorEl.style.display = 'none';
+          setTimeout(() => { window.location.href = '/'; }, 500);
+        } else {
+          errorEl.textContent = data.message || '注册失败';
+          errorEl.style.display = 'block';
+        }
+      } catch (e) {
+        errorEl.textContent = '网络错误';
+        errorEl.style.display = 'block';
+      }
+    });
+
+    // 普通用户注册
+    document.getElementById('goToRegister').addEventListener('click', () => {
+      loginForm.style.display = 'none';
+      registerForm.style.display = 'block';
+    });
+    document.getElementById('goToLogin').addEventListener('click', () => {
+      registerForm.style.display = 'none';
+      loginForm.style.display = 'block';
+    });
+
+    document.getElementById('regBtn').addEventListener('click', async () => {
+      const username = document.getElementById('regUsername').value.trim();
+      const password = document.getElementById('regPassword').value;
+      const errorEl = document.getElementById('regError');
+      const successEl = document.getElementById('regSuccess');
+
+      if (!username || !password) {
+        errorEl.textContent = '请填写用户名和密码';
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      try {
+        const resp = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await resp.json();
+
+        if (resp.ok) {
+          successEl.textContent = '注册成功！请返回登录';
+          successEl.style.display = 'block';
+          errorEl.style.display = 'none';
+        } else {
+          errorEl.textContent = data.message || '注册失败';
+          errorEl.style.display = 'block';
+          successEl.style.display = 'none';
+        }
+      } catch (e) {
+        errorEl.textContent = '网络错误';
+        errorEl.style.display = 'block';
+      }
+    });
+
+    init();
+  </script>
+</body>
+</html>

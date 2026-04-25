@@ -5,8 +5,11 @@ import cn.hutool.core.lang.Console;
 import cn.hutool.core.util.StrUtil;
 import com.pcdd.sonovel.core.AppConfigLoader;
 import com.pcdd.sonovel.core.Crawler;
+import com.pcdd.sonovel.db.HistoryRepository;
 import com.pcdd.sonovel.model.AppConfig;
+import com.pcdd.sonovel.model.Rule;
 import com.pcdd.sonovel.model.SearchResult;
+import com.pcdd.sonovel.parse.BookParser;
 import com.pcdd.sonovel.util.SourceUtils;
 import com.pcdd.sonovel.web.util.RespUtils;
 import jakarta.servlet.http.HttpServlet;
@@ -19,6 +22,8 @@ public class BookFetchServlet extends HttpServlet {
 
     private static final Set<String> ALLOWED_FORMATS = Set.of("epub", "txt", "html", "pdf");
     private static final Set<String> ALLOWED_LANGUAGES = Set.of("zh_cn", "zh_tw", "zh_hant");
+
+    private final HistoryRepository historyRepository = new HistoryRepository();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
@@ -55,10 +60,29 @@ public class BookFetchServlet extends HttpServlet {
                     .url(bookUrl)
                     .build();
 
+            // 先解析书籍信息用于记录历史
+            String finalFormat = StrUtil.isNotBlank(format) ? format.toLowerCase() : AppConfigLoader.APP_CONFIG.getExtName();
+            Rule rule = SourceUtils.getRule(bookUrl);
+
             double totalTimeSeconds = downloadFileToServer(sr, format, language, concurrency);
             if (totalTimeSeconds == 0) {
                 RespUtils.writeError(resp, 500, "源站章节目录为空，中止下载");
+                return;
             }
+
+            // 记录下载历史
+            try {
+                Integer userId = (Integer) req.getAttribute("userId");
+                String username = (String) req.getAttribute("username");
+                if (userId != null && username != null) {
+                    historyRepository.add(userId, "未知书名", "", rule.getName(), finalFormat, "", 0);
+                    historyRepository.addLog(username, "未知书名", "", finalFormat, rule.getName());
+                }
+            } catch (Exception ignored) {
+                // 历史记录失败不影响下载
+            }
+
+            RespUtils.writeJson(resp, java.util.Map.of("message", "下载完成", "timeSeconds", totalTimeSeconds));
 
         } catch (Exception e) {
             RespUtils.writeError(resp, 500, e.getMessage());

@@ -194,22 +194,94 @@ https://github.com/freeok/so-novel/issues?q=label%3A%22usage%20question%22
 
 https://github.com/freeok/so-novel/discussions?discussions_q=
 
-## 支持 & 赞助
-
-如果觉得有所帮助，欢迎扫码赞助☕、点击项目主页顶部的⭐Star 按钮支持！
-
-🚀这将是我们持续更新的动力源泉！同时，你也能第一时间获取到最新的更新动态。💡❤️
-
-| 支付宝赞助                                                           | 微信赞助                                                           |
-|-----------------------------------------------------------------|----------------------------------------------------------------|
-| <img src="assets/donation-alipay.png" alt="支付宝收款码" width="197"> | <img src="assets/donation-wechat.jpg" alt="微信赞赏码" width="197"> |
-
-[项目赞助者列表](./SPONSORS.md)
-
 ## 免责声明
 
 在使用本工具前，请务必仔细阅读我们的[法律免责声明](bundle/DISCLAIMER.md)。使用本工具即表示您已阅读、理解并同意遵守所有条款。
 
-## Star History
+---
 
-[![Star History Chart](https://api.star-history.com/svg?repos=freeok/so-novel&type=Date)](https://star-history.com/#freeok/so-novel&Date)
+## 🚀 服务端模式（改版新增）
+
+> 这是基于原版 SoNovel 的增强改版，增加了完整的服务端部署能力、用户认证系统和 Web API。
+
+### 主要新增功能
+
+| 功能 | 说明 |
+|------|------|
+| 🔐 **用户认证系统** | 注册/登录/权限管理，Token 认证 |
+| 👑 **管理员后台** | 用户管理、封禁/解封、下载日志 |
+| 🔑 **API Token** | 支持第三方程序通过 Token 调用 API |
+| 📡 **RESTful API** | 搜索、下载、查询等完整 API 接口 |
+| 📜 **下载历史** | 记录用户下载行为 |
+| 🗄️ **SQLite 数据库** | 持久化存储用户、Token、历史数据 |
+
+### 快速启动（服务端模式）
+
+```bash
+# 方式1：修改 config.ini，添加以下配置
+[web]
+enabled=1
+port=7765
+
+# 然后启动
+java -jar app.jar
+
+# 方式2：通过命令行参数
+java -Dmode=web -jar app.jar
+```
+
+### 首次使用
+
+1. 启动服务后，访问 `http://localhost:7765`
+2. 页面会自动跳转到管理员注册页面
+3. 注册管理员账号（密码不少于 6 位）
+4. 注册成功后自动登录，进入主界面
+5. 在首页右上角可创建 API Token 供第三方程序使用
+6. 管理员可在首页右上角进入"管理后台"管理用户
+
+### 与上游同步
+
+该项目基于 [freeok/so-novel](https://github.com/freeok/so-novel) 改造。为便于与上游同步，改版代码均放在原包结构中，新增文件如下：
+
+```
+src/main/java/com/pcdd/sonovel/
+├── db/                    # 【新增】数据库层
+│   ├── DatabaseManager.java
+│   ├── UserRepository.java
+│   ├── TokenRepository.java
+│   └── HistoryRepository.java
+├── web/
+│   ├── AuthFilter.java    # 【新增】认证过滤器
+│   └── servlet/
+│       ├── AuthServlet.java    # 【新增】认证接口
+│       ├── TokenServlet.java   # 【新增】Token 管理
+│       ├── AdminServlet.java   # 【新增】管理员接口
+│       └── HistoryServlet.java # 【新增】历史记录
+src/main/resources/static/
+├── login.html             # 【新增】登录/注册页
+├── admin.html             # 【新增】管理后台页
+└── index.html             # 【修改】添加认证和Token管理
+```
+
+### 与上游代码同步策略
+
+1. 将上游改动合并到 `src/main/java/com/pcdd/sonovel/` 下原有文件
+2. 新增的文件（`db/`, `AuthFilter.java`, `AuthServlet.java` 等）不受上游影响
+3. `pom.xml` 中新增的 SQLite 依赖不会影响原版功能
+4. `index.html` 中的新功能封装在独立区域，方便合并
+
+### 改版 vs 原版对比
+
+| 维度 | 原版 | 改版 |
+|------|------|------|
+| 使用方式 | CLI / TUI / Web (局域网) | 服务端部署 + API |
+| 用户系统 | 无 | 完整的注册/登录/权限 |
+| API 接口 | 无 | 完整的 RESTful API |
+| Token 认证 | 无 | 支持 API Token |
+| 数据存储 | 无持久化 | SQLite 数据库 |
+| 管理员功能 | 无 | 用户管理/封禁/日志 |
+| 第三方集成 | 不支持 | 可通过 API 集成 |
+
+### 详细 API 文档
+
+参见 [API.md](API.md)。

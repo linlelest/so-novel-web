@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>SoNovel - 管理后台</title>
+  <style>
+    :root {
+      --primary: #5d5d81;
+      --primary-hover: #7b7b9d;
+      --bg: #f8f9fa;
+      --card-bg: #fff;
+      --text: #333;
+      --text-secondary: #666;
+      --border: #e5e5e5;
+      --danger: #e74c3c;
+      --success: #27ae60;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      color: var(--text);
+    }
+    .header {
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header h1 { font-size: 1.3rem; color: var(--primary); }
+    .header-actions { display: flex; gap: 12px; align-items: center; }
+    .header-actions .btn {
+      padding: 8px 16px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--card-bg);
+      cursor: pointer;
+      font-size: 0.85rem;
+      color: var(--text);
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .header-actions .btn:hover { border-color: var(--primary); color: var(--primary); }
+    .header-actions .btn-danger { color: var(--danger); border-color: var(--danger); }
+    .header-actions .btn-danger:hover { background: var(--danger); color: #fff; }
+    .container {
+      max-width: 1200px;
+      margin: 24px auto;
+      padding: 0 24px;
+    }
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .card h2 {
+      font-size: 1.1rem;
+      margin-bottom: 16px;
+      color: var(--primary);
+      border-left: 3px solid var(--primary);
+      padding-left: 10px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9rem;
+    }
+    th {
+      background: var(--bg);
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+    .badge-admin { background: #f0f9eb; color: #529b2e; }
+    .badge-user { background: #f0f2f5; color: #666; }
+    .badge-banned { background: #fef0f0; color: #e74c3c; }
+    .badge-active { background: #f0f9eb; color: #27ae60; }
+    .action-btn {
+      padding: 4px 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+    .action-btn-ban { background: #fef0f0; color: #e74c3c; }
+    .action-btn-ban:hover { background: #e74c3c; color: #fff; }
+    .action-btn-unban { background: #f0f9eb; color: #27ae60; }
+    .action-btn-unban:hover { background: #27ae60; color: #fff; }
+    .tabs {
+      display: flex;
+      gap: 0;
+      margin-bottom: 20px;
+      border-bottom: 2px solid var(--border);
+    }
+    .tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.2s;
+    }
+    .tab.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+      font-weight: 600;
+    }
+    .tab:hover { color: var(--primary); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .loading { text-align: center; padding: 40px; color: var(--text-secondary); }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>📊 管理后台</h1>
+    <div class="header-actions">
+      <a href="/" class="btn">返回首页</a>
+      <button class="btn btn-danger" id="logoutBtn">退出登录</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="tabs">
+      <div class="tab active" data-tab="users">用户管理</div>
+      <div class="tab" data-tab="logs">下载日志</div>
+    </div>
+
+    <!-- 用户管理 -->
+    <div class="tab-content active" id="tab-users">
+      <div class="card">
+        <h2>用户列表</h2>
+        <div class="loading" id="usersLoading">加载中...</div>
+        <div id="usersTableWrapper" style="display:none">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>用户名</th>
+                <th>角色</th>
+                <th>状态</th>
+                <th>注册时间</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 下载日志 -->
+    <div class="tab-content" id="tab-logs">
+      <div class="card">
+        <h2>下载日志（全局）</h2>
+        <div class="loading" id="logsLoading">加载中...</div>
+        <div id="logsTableWrapper" style="display:none">
+          <table>
+            <thead>
+              <tr>
+                <th>用户</th>
+                <th>书名</th>
+                <th>格式</th>
+                <th>时间</th>
+              </tr>
+            </thead>
+            <tbody id="logsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 检查会话
+    async function checkSession() {
+      try {
+        const resp = await fetch('/api/auth/check');
+        const data = await resp.json();
+        if (!data.authenticated || data.role !== 'admin') {
+          window.location.href = '/login.html';
+          return null;
+        }
+        document.getElementById('usersLoading').textContent = '';
+        return data;
+      } catch (e) {
+        window.location.href = '/login.html';
+        return null;
+      }
+    }
+
+    // 加载用户列表
+    async function loadUsers() {
+      try {
+        const resp = await fetch('/api/admin/users');
+        if (!resp.ok) throw new Error('无权访问');
+        const data = await resp.json();
+        const users = data.data;
+        const tbody = document.getElementById('usersTableBody');
+        
+        if (!users || users.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#999">暂无用户</td></tr>';
+        } else {
+          tbody.innerHTML = users.map(u => `
+            <tr>
+              <td>${u.id}</td>
+              <td>${u.username}</td>
+              <td><span class="badge ${u.role === 'admin' ? 'badge-admin' : 'badge-user'}">${u.role === 'admin' ? '管理员' : '用户'}</span></td>
+              <td><span class="badge ${u.banned ? 'badge-banned' : 'badge-active'}">${u.banned ? '已封禁' : '正常'}</span></td>
+              <td>${new Date(u.createdAt).toLocaleString('zh-CN')}</td>
+              <td>
+                ${u.role !== 'admin' ? `
+                  <button class="action-btn ${u.banned ? 'action-btn-unban' : 'action-btn-ban'}" 
+                          onclick="toggleBan(${u.id}, ${u.banned ? 0 : 1})">
+                    ${u.banned ? '解封' : '封禁'}
+                  </button>
+                ` : '<span style="color:#999">-</span>'}
+              </td>
+            </tr>
+          `).join('');
+        }
+        document.getElementById('usersLoading').style.display = 'none';
+        document.getElementById('usersTableWrapper').style.display = 'block';
+      } catch (e) {
+        document.getElementById('usersLoading').textContent = '加载失败: ' + e.message;
+      }
+    }
+
+    // 封禁/解封
+    async function toggleBan(userId, banned) {
+      if (banned && !confirm('确定要封禁该用户吗？')) return;
+      
+      try {
+        const resp = await fetch('/api/admin/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, action: banned ? 'ban' : 'unban' })
+        });
+        if (resp.ok) {
+          loadUsers();
+        } else {
+          const data = await resp.json();
+          alert(data.message || '操作失败');
+        }
+      } catch (e) {
+        alert('网络错误');
+      }
+    }
+
+    // 加载下载日志
+    async function loadLogs() {
+      try {
+        const resp = await fetch('/api/admin/logs');
+        if (!resp.ok) throw new Error('无权访问');
+        const data = await resp.json();
+        const logs = data.data;
+        const tbody = document.getElementById('logsTableBody');
+        
+        if (!logs || logs.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#999">暂无下载记录</td></tr>';
+        } else {
+          tbody.innerHTML = logs.map(log => `
+            <tr>
+              <td>${log.bookName || '-'}</td>
+              <td>${log.author || '-'}</td>
+              <td>${(log.format || '').toUpperCase()}</td>
+              <td>${new Date(log.createdAt).toLocaleString('zh-CN')}</td>
+            </tr>
+          `).join('');
+        }
+        document.getElementById('logsLoading').style.display = 'none';
+        document.getElementById('logsTableWrapper').style.display = 'block';
+      } catch (e) {
+        document.getElementById('logsLoading').textContent = '加载失败: ' + e.message;
+      }
+    }
+
+    // 登出
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      window.location.href = '/login.html';
+    });
+
+    // Tab 切换
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+      });
+    });
+
+    // 初始化
+    checkSession().then(session => {
+      if (session) {
+        loadUsers();
+        loadLogs();
+      }
+    });
+  </script>
+</body>
+</html>
