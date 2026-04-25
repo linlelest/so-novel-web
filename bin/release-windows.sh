@@ -38,6 +38,7 @@ download_jre() {
 }
 run_maven() { mvn clean package -P"$MAVEN_PROFILE" '-Dmaven.test.skip=true' '-DjrePath=runtime'; }
 copy_files() {
+    mkdir -p "$TARGET_DIR"
     cp "bundle/$JRE_FILENAME" "$TARGET_DIR"
     cp "target/app-jar-with-dependencies.jar" "$TARGET_DIR/app.jar"
     cp -r bundle/rules "$TARGET_DIR/"
