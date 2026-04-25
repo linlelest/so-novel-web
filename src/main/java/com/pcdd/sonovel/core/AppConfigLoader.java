@@ -97,6 +97,7 @@ public class AppConfigLoader {
             cfg.setWebEnabled(usr.getInt("enabled", SELECTION_WEB, 0));
         }
         cfg.setWebPort(usr.getInt("port", SELECTION_WEB, 7765));
+        cfg.setWinDevmode(usr.getInt("win_devmode", SELECTION_WEB, 0));
 
         // [cookie]
         cfg.setQidianCookie(usr.getStr("qidian", SELECTION_COOKIE, ""));

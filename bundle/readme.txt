@@ -40,6 +40,9 @@ curl -sSL https://raw.githubusercontent.com/linlelest/so-novel-web/main/deploy.s
 | search-limit  | 搜索结果数量限制   | 30         |
 | concurrency   | 并发下载上限       | (自动)     |
 | port          | Web 服务端口       | 7765       |
+| win_devmode   | Windows调试模式    | 0          |
+|               | 0=后台托盘(默认)   |            |
+|               | 1=显示控制台窗口   |            |
 
 修改配置后重启应用生效。
 

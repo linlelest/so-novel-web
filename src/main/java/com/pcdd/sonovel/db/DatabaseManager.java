@@ -108,6 +108,51 @@ public class DatabaseManager {
                         updated_at INTEGER NOT NULL
                     )
                     """);
+            // IP 黑名单
+            stmt.execute("""
+                    CREATE TABLE IF NOT EXISTS ip_blacklist (
+                        ip TEXT PRIMARY KEY,
+                        reason TEXT DEFAULT '',
+                        banned_at INTEGER NOT NULL,
+                        expires_at INTEGER NOT NULL
+                    )
+                    """);
+            // 被封禁/删除用户记录（用于"严重违规"公告）
+            stmt.execute("""
+                    CREATE TABLE IF NOT EXISTS banned_users_log (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        username TEXT NOT NULL,
+                        reason TEXT NOT NULL,
+                        action TEXT NOT NULL,
+                        created_at INTEGER NOT NULL
+                    )
+                    """);
+            // 系统配置
+            stmt.execute("""
+                    CREATE TABLE IF NOT EXISTS sys_config (
+                        key TEXT PRIMARY KEY,
+                        value TEXT NOT NULL
+                    )
+                    """);
+            // 初始化默认配置
+            stmt.execute("""
+                    INSERT OR IGNORE INTO sys_config VALUES ('contact_info', '请联系管理员')
+                    """);
+            stmt.execute("""
+                    INSERT OR IGNORE INTO sys_config VALUES ('api_search_rate', '10/60')
+                    """);
+            stmt.execute("""
+                    INSERT OR IGNORE INTO sys_config VALUES ('api_download_rate', '3/3600')
+                    """);
+            stmt.execute("""
+                    INSERT OR IGNORE INTO sys_config VALUES ('web_search_rate', '30/60')
+                    """);
+            stmt.execute("""
+                    INSERT OR IGNORE INTO sys_config VALUES ('web_download_rate', '5/3600')
+                    """);
+            stmt.execute("""
+                    INSERT OR IGNORE INTO sys_config VALUES ('web_visit_rate', '60/60')
+                    """);
         }
     }
 

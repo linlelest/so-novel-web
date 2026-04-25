@@ -41,6 +41,7 @@ public class AppConfig {
     // [web]
     private Integer webEnabled;
     private Integer webPort;
+    private Integer winDevmode;
 
     // [cookie]
     private String qidianCookie;

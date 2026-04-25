@@ -32,8 +32,18 @@ public class Main {
         int port = cfg.getWebPort() > 0 ? cfg.getWebPort() : 7765;
 
         boolean isWindows = System.getProperty("os.name", "").toLowerCase().contains("win");
+        int winDevMode = AppConfigLoader.APP_CONFIG.getWinDevmode() != null ? AppConfigLoader.APP_CONFIG.getWinDevmode() : 0;
 
-        if (isWindows) {
+        if (isWindows && winDevMode == 0) {
+            // Windows 默认: 后台启动 WebServer，前台显示托盘 GUI
+            new Thread(() -> {
+                Console.log(render("SoNovel v{} Web 服务启动", "blue"), AppConfigLoader.APP_CONFIG.getVersion());
+                Console.log(render("➜ http://localhost:{}/login.html", "green"), port);
+                new WebServer().start();
+            }, "web-server").start();
+
+            com.pcdd.sonovel.launch.WinLauncher.launch();
+        } else {
             // Windows: 后台启动 WebServer，前台显示托盘 GUI
             new Thread(() -> {
                 Console.log(render("SoNovel v{} Web 服务启动", "blue"), AppConfigLoader.APP_CONFIG.getVersion());

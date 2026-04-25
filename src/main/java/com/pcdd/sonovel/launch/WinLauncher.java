@@ -105,16 +105,18 @@ public class WinLauncher {
         Image image = createTrayImage();
 
         PopupMenu popup = new PopupMenu();
+        // 使用系统菜单字体，避免中文乱码
+        Font menuFont = getSystemFont();
 
         MenuItem openItem = new MenuItem("打开网页");
-        openItem.setFont(new Font("Microsoft YaHei", Font.PLAIN, 12));
+        if (menuFont != null) openItem.setFont(menuFont);
         openItem.addActionListener(e -> openBrowser(loginUrl));
         popup.add(openItem);
 
         popup.addSeparator();
 
         CheckboxMenuItem autoStartItem = new CheckboxMenuItem("开机自启");
-        autoStartItem.setFont(new Font("Microsoft YaHei", Font.PLAIN, 12));
+        if (menuFont != null) autoStartItem.setFont(menuFont);
         autoStartItem.setState(isAutoStartEnabled());
         autoStartItem.addItemListener(e -> setAutoStart(autoStartItem.getState()));
         popup.add(autoStartItem);
@@ -122,7 +124,7 @@ public class WinLauncher {
         popup.addSeparator();
 
         MenuItem exitItem = new MenuItem("退出");
-        exitItem.setFont(new Font("Microsoft YaHei", Font.PLAIN, 12));
+        if (menuFont != null) exitItem.setFont(menuFont);
         exitItem.addActionListener(e -> System.exit(0));
         popup.add(exitItem);
 
@@ -133,8 +135,31 @@ public class WinLauncher {
         return trayIcon;
     }
 
+    private static Font getSystemFont() {
+        // 从系统获取默认菜单字体
+        try {
+            // 使用 Swing 默认字体
+            return javax.swing.UIManager.getFont("MenuItem.font");
+        } catch (Exception e) {
+            return new Font("Microsoft YaHei", Font.PLAIN, 12);
+        }
+    }
+
     private static Image createTrayImage() {
-        // 创建一个 16x16 的简单图标
+        // 尝试从资源加载 logo.ico
+        try {
+            java.net.URL url = WinLauncher.class.getResource("/static/logo.ico");
+            if (url != null) {
+                Image img = java.awt.Toolkit.getDefaultToolkit().getImage(url);
+                // 确保图片已加载完成
+                MediaTracker tracker = new MediaTracker(new java.awt.Canvas());
+                tracker.addImage(img, 0);
+                try { tracker.waitForID(0); } catch (Exception ignored) {}
+                if (img.getWidth(null) > 0) return img;
+            }
+        } catch (Exception ignored) {}
+
+        // 后备：绘制默认图标
         BufferedImage bi = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = bi.createGraphics();
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -145,6 +170,7 @@ public class WinLauncher {
         g.drawString("S", 3, 12);
         g.dispose();
         return bi;
+    }
     }
 
     private static void addTrayToSystemTray(TrayIcon trayIcon) {

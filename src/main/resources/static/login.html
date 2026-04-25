@@ -1,197 +1,46 @@
-<!DOCTYPE html>
-<html lang="zh">
-<head>
-  <meta charset="UTF-8">
-  <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <title>SoNovel - 登录</title>
-  <style>
-    :root { --primary: #5d5d81; --primary-hover: #7b7b9d; --bg: #f8f9fa; --card-bg: #fff; --text: #333; --text-secondary: #666; --border: #e5e5e5; --error: #e74c3c; --success: #27ae60; }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system,'PingFang SC','Microsoft YaHei',sans-serif; background: var(--bg); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
-    .auth-container { background: var(--card-bg); border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,.1); padding: 40px; width: 100%; max-width: 420px; }
-    .logo { text-align: center; margin-bottom: 32px; }
-    .logo h1 { font-size: 2rem; color: var(--primary); letter-spacing: 2px; margin: 0; }
-    .logo p { color: var(--text-secondary); margin-top: 8px; font-size: .9rem; }
-    .form-group { margin-bottom: 20px; }
-    .form-group label { display: block; margin-bottom: 6px; color: var(--text); font-weight: 500; font-size: .9rem; }
-    .form-group input { width: 100%; padding: 12px 16px; border: 2px solid var(--border); border-radius: 10px; font-size: 1rem; transition: border-color .2s; outline: none; }
-    .form-group input:focus { border-color: var(--primary); }
-    .btn { width: 100%; padding: 14px; border: none; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all .2s; }
-    .btn-primary { background: var(--primary); color: #fff; }
-    .btn-primary:hover { background: var(--primary-hover); }
-    .btn-primary:disabled { opacity: .6; cursor: not-allowed; }
-    .msg { font-size: .85rem; margin-top: 12px; text-align: center; display: none; }
-    .msg-error { color: var(--error); }
-    .msg-success { color: var(--success); }
-    .toggle-link { text-align: center; margin-top: 16px; font-size: .9rem; color: var(--text-secondary); }
-    .toggle-link a { color: var(--primary); text-decoration: none; cursor: pointer; }
-    .toggle-link a:hover { text-decoration: underline; }
-    .info-box { background: #f0f9eb; border: 1px solid #e1f3d8; border-radius: 10px; padding: 16px; margin-bottom: 24px; text-align: center; color: #529b2e; font-size: .9rem; display: none; }
-    .loading { text-align: center; padding: 40px; color: var(--text-secondary); }
-    .hidden { display: none !important; }
-  </style>
-</head>
-<body>
-  <div class="auth-container">
-    <div class="logo">
-      <h1>SO NOVEL</h1>
-      <p>网络小说下载与管理平台</p>
-    </div>
+<!DOCTYPE html><html lang="zh"><head><meta charset="UTF-8"><meta content="width=device-width,initial-scale=1.0" name="viewport">
+<title>SoNovel - 登录</title><style>:root{--primary:#5d5d81;--ph:#7b7b9d;--bg:#f8f9fa;--cb:#fff;--text:#333;--ts:#666;--border:#e5e5e5;--err:#e74c3c;--ok:#27ae60;--shadow:0 8px 32px rgba(0,0,0,.1)}[data-theme="dark"]{--bg:#1a1a2e;--cb:#16213e;--text:#e0e0e0;--ts:#a0a0a0;--border:#2a2a4a;--primary:#8b8bb0;--ph:#a0a0c0;--shadow:0 8px 32px rgba(0,0,0,.5)}*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;transition:background .3s}.ac{background:var(--cb);border-radius:16px;box-shadow:var(--shadow);padding:40px;width:100%;max-width:420px;transition:background .3s}.logo{text-align:center;margin-bottom:32px}.logo h1{font-size:2rem;color:var(--primary);letter-spacing:2px;margin:0}.logo p{color:var(--ts);margin-top:8px;font-size:.9rem}.fg{margin-bottom:20px}.fg label{display:block;margin-bottom:6px;color:var(--text);font-weight:500;font-size:.9rem}.fg input{width:100%;padding:12px 16px;border:2px solid var(--border);border-radius:10px;font-size:1rem;outline:none;background:var(--cb);color:var(--text);transition:border-color .2s}.fg input:focus{border-color:var(--primary)}.btn{width:100%;padding:14px;border:none;border-radius:10px;font-size:1rem;font-weight:600;cursor:pointer;transition:all .2s}.btn-p{background:var(--primary);color:#fff}.btn-p:hover{background:var(--ph)}.btn-p:disabled{opacity:.6;cursor:not-allowed}.msg{font-size:.85rem;margin-top:12px;text-align:center;display:none}.msg-e{color:var(--err)}.msg-s{color:var(--ok)}.tl{text-align:center;margin-top:16px;font-size:.9rem;color:var(--ts)}.tl a{color:var(--primary);text-decoration:none;cursor:pointer}.tl a:hover{text-decoration:underline}.ib{background:#f0f9eb;border:1px solid #e1f3d8;border-radius:10px;padding:16px;margin-bottom:24px;text-align:center;color:#529b2e;font-size:.9rem;display:none}.loading{text-align:center;padding:40px;color:var(--ts)}.hidden{display:none!important}.thm-btn{position:fixed;top:12px;right:16px;background:none;border:1px solid var(--border);border-radius:20px;cursor:pointer;font-size:1.2rem;padding:6px 12px;color:var(--text);z-index:10}.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 24px;border-radius:8px;font-size:.85rem;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;max-width:90%;text-align:center}.toast.show{opacity:1}.toast.e{background:var(--err)}.toast.s{background:var(--ok)}</style></head><body>
+<button class="thm-btn" id="themeBtn" title="切换主题">🌓</button>
+<div class="ac"><div class="logo"><h1>SO NOVEL</h1><p>网络小说下载与管理平台</p></div>
+<div class="loading" id="load">加载中...</div>
+<div id="adminReg" class="hidden"><div class="ib" style="display:block">🎉 首次使用！请注册管理员账号</div>
+<div class="fg"><label>管理员用户名</label><input type="text" id="arUser" placeholder="输入管理员用户名" autocomplete="username"></div>
+<div class="fg"><label>管理员密码</label><input type="password" id="arPw" placeholder="至少6个字符" autocomplete="new-password"></div>
+<button class="btn btn-p" id="arBtn">注册管理员</button></div>
+<div id="loginF" class="hidden"><div class="fg"><label>用户名</label><input type="text" id="lgUser" placeholder="输入用户名" autocomplete="username"></div>
+<div class="fg"><label>密码</label><input type="password" id="lgPw" placeholder="输入密码" autocomplete="current-password"></div>
+<button class="btn btn-p" id="lgBtn">登 录</button><div class="tl">还没有账号？<a id="goReg">立即注册</a></div></div>
+<div id="regF" class="hidden"><div class="fg"><label>用户名</label><input type="text" id="regUser" placeholder="2-20个字符" autocomplete="username"></div>
+<div class="fg"><label>密码</label><input type="password" id="regPw" placeholder="至少4个字符" autocomplete="new-password"></div>
+<button class="btn btn-p" id="regBtn">注 册</button><div class="tl">已有账号？<a id="goLogin">返回登录</a></div></div></div>
+<div class="toast" id="toast"></div>
+<script>function $(id){return document.getElementById(id)}function show(e){e.classList.remove('hidden')}function hide(e){e.classList.add('hidden')}
+function gd(d){return(d&&d.data!==undefined)?d.data:d}
+function t(m,c){var el=$('toast');el.textContent=m;el.className='toast show'+(c?' '+c:'');setTimeout(function(){el.classList.remove('show')},2500)}
 
-    <div class="loading" id="loadingEl">加载中...</div>
+// Theme
+var theme=localStorage.getItem('sonovel-theme')||'light';document.documentElement.setAttribute('data-theme',theme);
+$('themeBtn').addEventListener('click',function(){theme=theme==='light'?'dark':'light';document.documentElement.setAttribute('data-theme',theme);localStorage.setItem('sonovel-theme',theme);this.textContent=theme==='light'?'🌙':'☀️'});
+if(theme==='dark')$('themeBtn').textContent='☀️';
 
-    <!-- 管理员注册 (无管理员时显示) -->
-    <div id="adminRegisterForm" class="hidden">
-      <div class="info-box" id="firstRunInfo" style="display:block">🎉 首次使用！请注册管理员账号</div>
-      <div class="form-group">
-        <label>管理员用户名</label>
-        <input type="text" id="adminRegUsername" placeholder="输入管理员用户名" autocomplete="username">
-      </div>
-      <div class="form-group">
-        <label>管理员密码</label>
-        <input type="password" id="adminRegPassword" placeholder="至少 6 个字符" autocomplete="new-password">
-      </div>
-      <button class="btn btn-primary" id="adminRegBtn">注册管理员</button>
-      <div class="msg msg-error" id="adminRegError"></div>
-      <div class="msg msg-success" id="adminRegSuccess"></div>
-    </div>
+async function init(){try{var r=await fetch('/api/auth/check-admin');var d=gd(await r.json());$('load').style.display='none';
+if(!d.hasAdmin){show($('adminReg'))}else{show($('loginF'))}}catch(e){$('load').textContent='服务器连接失败'}}
 
-    <!-- 登录 -->
-    <div id="loginForm" class="hidden">
-      <div class="form-group">
-        <label>用户名</label>
-        <input type="text" id="loginUsername" placeholder="输入用户名" autocomplete="username">
-      </div>
-      <div class="form-group">
-        <label>密码</label>
-        <input type="password" id="loginPassword" placeholder="输入密码" autocomplete="current-password">
-      </div>
-      <button class="btn btn-primary" id="loginBtn">登 录</button>
-      <div class="msg msg-error" id="loginError"></div>
-      <div class="msg msg-success" id="loginSuccess"></div>
-      <div class="toggle-link">还没有账号？<a id="goToRegister">立即注册</a></div>
-    </div>
+$('lgBtn').addEventListener('click',async function(){var u=$('lgUser').value.trim(),p=$('lgPw').value;
+if(!u||!p){t('请输入用户名和密码','e');return}
+try{var r=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});var d=await r.json();
+if(r.ok&&d.code===200){t('登录成功');setTimeout(function(){window.location.href='/'},500)}
+else{t(d.message||'登录失败','e');if(d.code===403)t(d.message,'e')}}catch(e){t('网络错误','e')}});
 
-    <!-- 注册（普通用户） -->
-    <div id="registerForm" class="hidden">
-      <div class="form-group">
-        <label>用户名</label>
-        <input type="text" id="regUsername" placeholder="2-20 个字符" autocomplete="username">
-      </div>
-      <div class="form-group">
-        <label>密码</label>
-        <input type="password" id="regPassword" placeholder="至少 4 个字符" autocomplete="new-password">
-      </div>
-      <button class="btn btn-primary" id="regBtn">注 册</button>
-      <div class="msg msg-error" id="regError"></div>
-      <div class="msg msg-success" id="regSuccess"></div>
-      <div class="toggle-link">已有账号？<a id="goToLogin">返回登录</a></div>
-    </div>
-  </div>
-
-  <script>
-    const loadingEl = document.getElementById('loadingEl');
-
-    function show(el) { el.classList.remove('hidden'); }
-    function hide(el) { el.classList.add('hidden'); }
-
-    // 读取响应数据（服务端包装在 data.data 中）
-    function getData(respData, path) {
-      var p = path || '';
-      return (respData && respData.data !== undefined) ? respData.data : respData;
-    }
-
-    async function init() {
-      try {
-        var resp = await fetch('/api/auth/check-admin');
-        var body = await resp.json();
-        var hasAdmin = getData(body).hasAdmin;
-        loadingEl.style.display = 'none';
-        if (!hasAdmin) {
-          show(document.getElementById('adminRegisterForm'));
-        } else {
-          show(document.getElementById('loginForm'));
-        }
-      } catch(e) {
-        loadingEl.textContent = '无法连接服务器，请检查服务是否启动';
-        loadingEl.style.color = '#e74c3c';
-      }
-    }
-
-    // 登录
-    document.getElementById('loginBtn').addEventListener('click', async function() {
-      var u = document.getElementById('loginUsername').value.trim();
-      var p = document.getElementById('loginPassword').value;
-      var err = document.getElementById('loginError'), ok = document.getElementById('loginSuccess');
-      hide(err); hide(ok);
-      if (!u || !p) { err.textContent = '请输入用户名和密码'; show(err); return; }
-      try {
-        var resp = await fetch('/api/auth/login', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({username:u, password:p}) });
-        var data = await resp.json();
-        if (resp.ok && data.code === 200) {
-          ok.textContent = '登录成功，正在跳转...'; show(ok);
-          setTimeout(function() { window.location.href = '/'; }, 400);
-        } else {
-          err.textContent = data.message || '登录失败'; show(err);
-        }
-      } catch(e) { err.textContent = '网络错误'; show(err); }
-    });
-
-    document.getElementById('loginPassword').addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') document.getElementById('loginBtn').click();
-    });
-
-    // 管理员注册
-    document.getElementById('adminRegBtn').addEventListener('click', async function() {
-      var u = document.getElementById('adminRegUsername').value.trim();
-      var p = document.getElementById('adminRegPassword').value;
-      var err = document.getElementById('adminRegError'), ok = document.getElementById('adminRegSuccess');
-      hide(err); hide(ok);
-      if (!u || !p) { err.textContent = '请填写用户名和密码'; show(err); return; }
-      if (p.length < 6) { err.textContent = '密码长度不能少于 6 个字符'; show(err); return; }
-      try {
-        var resp = await fetch('/api/auth/admin-register', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({username:u, password:p}) });
-        var data = await resp.json();
-        if (resp.ok && data.code === 200) {
-          ok.textContent = '管理员注册成功！正在跳转...'; show(ok);
-          setTimeout(function() { window.location.href = '/'; }, 400);
-        } else {
-          err.textContent = data.message || '注册失败'; show(err);
-        }
-      } catch(e) { err.textContent = '网络错误'; show(err); }
-    });
-
-    // 页面切换
-    document.getElementById('goToRegister').addEventListener('click', function() {
-      hide(document.getElementById('loginForm'));
-      show(document.getElementById('registerForm'));
-    });
-    document.getElementById('goToLogin').addEventListener('click', function() {
-      hide(document.getElementById('registerForm'));
-      show(document.getElementById('loginForm'));
-    });
-
-    // 普通用户注册
-    document.getElementById('regBtn').addEventListener('click', async function() {
-      var u = document.getElementById('regUsername').value.trim();
-      var p = document.getElementById('regPassword').value;
-      var err = document.getElementById('regError'), ok = document.getElementById('regSuccess');
-      hide(err); hide(ok);
-      if (!u || !p) { err.textContent = '请填写用户名和密码'; show(err); return; }
-      try {
-        var resp = await fetch('/api/auth/register', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({username:u, password:p}) });
-        var data = await resp.json();
-        if (resp.ok && data.code === 200) {
-          ok.textContent = '注册成功！请返回登录'; show(ok);
-          document.getElementById('regUsername').value = '';
-          document.getElementById('regPassword').value = '';
-        } else {
-          err.textContent = data.message || '注册失败'; show(err);
-        }
-      } catch(e) { err.textContent = '网络错误'; show(err); }
-    });
-
-    init();
-  </script>
-</body>
-</html>
+$('lgPw').addEventListener('keydown',function(e){if(e.key==='Enter')$('lgBtn').click()});
+$('arBtn').addEventListener('click',async function(){var u=$('arUser').value.trim(),p=$('arPw').value;
+if(!u||!p){t('请填写用户名和密码','e');return}if(p.length<6){t('密码至少6个字符','e');return}
+try{var r=await fetch('/api/auth/admin-register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});var d=await r.json();
+if(r.ok&&d.code===200){t('管理员注册成功');setTimeout(function(){window.location.href='/'},500)}else t(d.message||'注册失败','e')}catch(e){t('网络错误','e')}});
+$('goReg').addEventListener('click',function(){hide($('loginF'));show($('regF'))});
+$('goLogin').addEventListener('click',function(){hide($('regF'));show($('loginF'))});
+$('regBtn').addEventListener('click',async function(){var u=$('regUser').value.trim(),p=$('regPw').value;
+if(!u||!p){t('请填写用户名和密码','e');return}
+try{var r=await fetch('/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});var d=await r.json();
+if(r.ok&&d.code===200){t('注册成功，请返回登录','s');$('regUser').value='';$('regPw').value='';hide($('regF'));show($('loginF'))}else t(d.message||'注册失败','e')}catch(e){t('网络错误','e')}});
+init();</script></body></html>
