@@ -7,52 +7,64 @@ on:
       - 'v*'
 
 jobs:
-  release-windows:
+  release-windows-x64:
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Set up JDK 21
-        uses: actions/setup-java@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '21'
           cache: 'maven'
-      - name: Build Windows amd64
-        run: bash bin/release-windows.sh
-      - name: Upload Windows
-        uses: actions/upload-artifact@v4
+      - run: bash bin/release-windows.sh x64
+      - uses: actions/upload-artifact@v4
         with:
-          name: windows-amd64
-          path: dist/sonovel-windows.tar.gz
+          name: windows-x64
+          path: dist/sonovel-windows_x64.tar.gz
+
+  release-windows-arm64:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'maven'
+      - run: bash bin/release-windows.sh arm64
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-arm64
+          path: dist/sonovel-windows_arm64.tar.gz
 
   release-linux:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    needs: [release-windows-x64, release-windows-arm64]
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Set up JDK 21
-        uses: actions/setup-java@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '21'
           cache: 'maven'
-      - name: Build Linux x64 + arm64
-        run: |
+      - run: |
           bash bin/release-linux.sh x64
           bash bin/release-linux.sh arm64
-      - name: Download Windows artifact
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
-          name: windows-amd64
+          name: windows-x64
           path: dist
-        continue-on-error: true
-      - name: Create Release
-        uses: ncipollo/release-action@v1
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows-arm64
+          path: dist
+      - uses: ncipollo/release-action@v1
         with:
           artifacts: "dist/*"
           token: ${{ secrets.GITHUB_TOKEN }} 

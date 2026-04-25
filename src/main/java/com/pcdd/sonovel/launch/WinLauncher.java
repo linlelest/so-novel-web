@@ -171,7 +171,6 @@ public class WinLauncher {
         g.dispose();
         return bi;
     }
-    }
 
     private static void addTrayToSystemTray(TrayIcon trayIcon) {
         try {
