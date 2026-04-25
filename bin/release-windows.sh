@@ -41,10 +41,12 @@ copy_files() {
     mkdir -p "$TARGET_DIR"
     cp "bundle/$JRE_FILENAME" "$TARGET_DIR"
     cp "target/app-jar-with-dependencies.jar" "$TARGET_DIR/app.jar"
+    # 复制 launch4j 生成的 exe（pom.xml 输出到 target/SoNovel/sonovel.exe）
+    cp "target/SoNovel/sonovel.exe" "$TARGET_DIR/sonovel.exe" 2>/dev/null || true
     cp -r bundle/rules "$TARGET_DIR/"
     cp bundle/config.ini bundle/sonovel.l4j.ini bundle/readme.txt "$TARGET_DIR"
     cp API.md "$TARGET_DIR"
-    echo "SoNovel 服务端改版 - Windows ${ARCH} 版" > "$TARGET_DIR/使用说明.txt"
+    echo "SoNovel 服务端改版 - Windows ${ARCH} 版 (双击 sonovel.exe 启动)" > "$TARGET_DIR/使用说明.txt"
 }
 extract_jre() { cd "$TARGET_DIR"; unzip -q "$JRE_FILENAME"; mv "$JRE_DIRNAME" runtime; rm "$JRE_FILENAME"; }
 package_artifacts() { mkdir -p "$DIST_PATH"; cd "$PROJECT_PATH/target"; tar czf "$DIST_FILENAME" "$DIST_DIRNAME"; mv "$DIST_FILENAME" "$DIST_PATH"; }
