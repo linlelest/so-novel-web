@@ -7,7 +7,6 @@ SoNovel Web 服务端 - 使用说明
 快速启动
 --------
 Linux:   ./run-linux.sh
-macOS:   ./run-macos.sh
 Windows: 双击 sonovel.exe
 
 启动后浏览器打开: http://localhost:7765

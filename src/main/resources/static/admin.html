@@ -11,7 +11,7 @@
     .header { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
     .header h1 { font-size: 1.3rem; color: var(--primary); }
     .header-actions { display: flex; gap: 12px; align-items: center; }
-    .header-actions .btn { padding: 8px 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--card-bg); cursor: pointer; font-size: 0.85rem; color: var(--text); text-decoration: none; transition: all .2s; }
+    .header-actions .btn { padding: 8px 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--card-bg); cursor: pointer; font-size: .85rem; color: var(--text); text-decoration: none; transition: all .2s; }
     .header-actions .btn:hover { border-color: var(--primary); color: var(--primary); }
     .header-actions .btn-danger { color: var(--danger); border-color: var(--danger); }
     .header-actions .btn-danger:hover { background: var(--danger); color: #fff; }
@@ -55,7 +55,7 @@
     .md-preview p { margin: 6px 0; }
     .md-preview code { background: var(--bg); padding: 2px 6px; border-radius: 4px; font-size: .85em; }
     .md-preview pre { background: #282c34; color: #abb2bf; padding: 12px; border-radius: 8px; overflow-x: auto; }
-    .md-preview pre code { background: none; padding: 0; }
+    .md-preview pre code { background: none; padding: 0; color: #abb2bf; }
     .md-preview ul,.md-preview ol { padding-left: 24px; }
     .md-preview blockquote { border-left: 4px solid var(--primary); padding-left: 12px; color: var(--text-secondary); margin: 8px 0; }
     .md-preview img { max-width: 100%; border-radius: 4px; }
@@ -77,112 +77,185 @@
   </style>
 </head>
 <body>
-  <div class="header">
-    <h1>📊 管理后台</h1>
-    <div class="header-actions">
-      <a href="/" class="btn">返回首页</a>
-      <button class="btn btn-danger" id="logoutBtn">退出登录</button>
-    </div>
-  </div>
-  <div class="container">
-    <div class="tabs">
-      <div class="tab active" data-tab="announcements">📢 公告管理</div>
-      <div class="tab" data-tab="users">👥 用户管理</div>
-      <div class="tab" data-tab="logs">📋 下载日志</div>
-    </div>
-    <div class="tab-content active" id="tab-announcements">
-      <div class="card">
-        <h2>系统公告</h2>
-        <button class="btn-primary" id="addAnnounceBtn">+ 发布公告</button>
-        <div class="loading" id="announceLoading">加载中...</div>
-        <div id="announceTableWrapper" style="display:none">
-          <table><thead><tr><th>ID</th><th>标题</th><th>置顶</th><th>更新时间</th><th>操作</th></tr></thead><tbody id="announceTableBody"></tbody></table>
-        </div>
-      </div>
-    </div>
-    <div class="tab-content" id="tab-users">
-      <div class="card">
-        <h2>用户列表</h2>
-        <div class="loading" id="usersLoading">加载中...</div>
-        <div id="usersTableWrapper" style="display:none">
-          <table><thead><tr><th>ID</th><th>用户名</th><th>角色</th><th>状态</th><th>注册时间</th><th>操作</th></tr></thead><tbody id="usersTableBody"></tbody></table>
-        </div>
-      </div>
-    </div>
-    <div class="tab-content" id="tab-logs">
-      <div class="card">
-        <h2>下载日志（全局）</h2>
-        <div class="loading" id="logsLoading">加载中...</div>
-        <div id="logsTableWrapper" style="display:none">
-          <table><thead><tr><th>用户名</th><th>书名</th><th>格式</th><th>时间</th></tr></thead><tbody id="logsTableBody"></tbody></table>
-        </div>
-      </div>
-    </div>
+<div class="header"><h1>📊 管理后台</h1><div class="header-actions"><a href="/" class="btn">返回首页</a><button class="btn btn-danger" id="logoutBtn">退出登录</button></div></div>
+<div class="container">
+  <div class="tabs">
+    <div class="tab active" data-tab="announcements">📢 公告管理</div>
+    <div class="tab" data-tab="users">👥 用户管理</div>
+    <div class="tab" data-tab="logs">📋 下载日志</div>
   </div>
 
-  <div class="modal-overlay" id="announceModal">
-    <div class="modal">
-      <button class="modal-close" id="announceModalClose">&times;</button>
-      <h3 id="announceModalTitle">发布公告</h3>
-      <input type="hidden" id="editAnnounceId">
-      <div class="form-group">
-        <label>公告标题</label>
-        <input type="text" id="announceTitle" placeholder="输入公告标题" maxlength="100">
-      </div>
-      <div class="form-group">
-        <label>内容（支持 Markdown）</label>
-        <div class="md-toolbar">
-          <button data-md="**${s}**" title="粗体">B</button>
-          <button data-md="*${s}*" title="斜体"><i>I</i></button>
-          <button data-md="# ${s}" title="标题1">H1</button>
-          <button data-md="## ${s}" title="标题2">H2</button>
-          <button data-md="### ${s}" title="标题3">H3</button>
-          <button data-md="[${s}](url)" title="链接">🔗</button>
-          <button data-md="![](${s})" title="图片">🖼</button>
-          <button data-md="\`${s}\`" title="行内代码">code</button>
-          <button data-md="\n\`\`\`\n${s}\n\`\`\`\n" title="代码块">```</button>
-          <button data-md="- ${s}" title="无序列表">•</button>
-          <button data-md="1. ${s}" title="有序列表">1.</button>
-          <button data-md="> ${s}" title="引用">❝</button>
-          <button data-md="---" title="分隔线">—</button>
-          <button id="previewToggle">👁 预览</button>
-        </div>
-        <textarea class="md-editor" id="announceContent" placeholder="输入公告内容（支持 Markdown 格式）"></textarea>
-        <div class="md-preview" id="announcePreview" style="display:none"></div>
-      </div>
-      <div class="form-group">
-        <label class="checkbox-label"><input type="checkbox" id="announcePinned"> 置顶此公告</label>
-      </div>
-      <button class="btn-primary" id="saveAnnounceBtn" style="width:100%">保存</button>
-    </div>
+  <div class="tab-content active" id="tab-announcements">
+    <div class="card"><h2>系统公告</h2><button class="btn-primary" id="addAnnounceBtn">+ 发布公告</button><div class="loading" id="aload">加载中...</div><div id="awrap" style="display:none"><table><thead><tr><th>ID</th><th>标题</th><th>置顶</th><th>更新时间</th><th>操作</th></tr></thead><tbody id="atbody"></tbody></table></div></div>
   </div>
+  <div class="tab-content" id="tab-users">
+    <div class="card"><h2>用户列表</h2><div class="loading" id="uload">加载中...</div><div id="uwrap" style="display:none"><table><thead><tr><th>ID</th><th>用户名</th><th>角色</th><th>状态</th><th>注册时间</th><th>操作</th></tr></thead><tbody id="utbody"></tbody></table></div></div>
+  </div>
+  <div class="tab-content" id="tab-logs">
+    <div class="card"><h2>下载日志</h2><div class="loading" id="lload">加载中...</div><div id="lwrap" style="display:none"><table><thead><tr><th>书名</th><th>作者</th><th>格式</th><th>时间</th></tr></thead><tbody id="ltbody"></tbody></table></div></div>
+  </div>
+</div>
 
-  <div class="toast" id="toast"></div>
+<div class="modal-overlay" id="amodal">
+  <div class="modal">
+    <button class="modal-close" id="amclose">&times;</button>
+    <h3 id="amtitle">发布公告</h3>
+    <input type="hidden" id="aid">
+    <div class="form-group"><label>公告标题</label><input type="text" id="atitle" placeholder="输入公告标题" maxlength="100"></div>
+    <div class="form-group"><label>内容（支持 Markdown）</label>
+      <div class="md-toolbar">
+        <button data-md="**${s}**" title="粗体">B</button>
+        <button data-md="*${s}*" title="斜体"><i>I</i></button>
+        <button data-md="# ${s}" title="标题1">H1</button>
+        <button data-md="## ${s}" title="标题2">H2</button>
+        <button data-md="### ${s}" title="标题3">H3</button>
+        <button data-md="[${s}](url)" title="链接">🔗</button>
+        <button data-md="![](${s})" title="图片">🖼</button>
+        <button data-md="\`${s}\`" title="行内代码">code</button>
+        <button data-md="\n\`\`\`\n${s}\n\`\`\`\n" title="代码块">```</button>
+        <button data-md="- ${s}" title="无序列表">•</button>
+        <button data-md="1. ${s}" title="有序列表">1.</button>
+        <button data-md="> ${s}" title="引用">❝</button>
+        <button data-md="---" title="分隔线">—</button>
+        <button id="pvwBtn">👁 预览</button>
+      </div>
+      <textarea class="md-editor" id="acontent" placeholder="输入公告内容（Markdown）"></textarea>
+      <div class="md-preview" id="apreview" style="display:none"></div>
+    </div>
+    <div class="form-group"><label class="checkbox-label"><input type="checkbox" id="apinned"> 置顶</label></div>
+    <button class="btn-primary" id="asave" style="width:100%">保存</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
 
-  <script>
-    function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000);}
-    function mdToHtml(t){if(!t)return'';let h=t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/^### (.+)$/gm,'<h3>$1</h3>').replace(/^## (.+)$/gm,'<h2>$1</h2>').replace(/^# (.+)$/gm,'<h1>$1</h1>').replace(/^> (.+)$/gm,'<blockquote>$1</blockquote>').replace(/^- (.+)$/gm,'<li>$1</li>').replace(/^(\d+)\. (.+)$/gm,'<li>$2</li>').replace(/```([\s\S]*?)```/g,'<pre><code>$1</code></pre>').replace(/`([^`]+)`/g,'<code>$1</code>').replace(/!\[([^\]]*)\]\(([^)]+)\)/g,'<img src="$2" alt="$1">').replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank">$1</a>').replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>').replace(/\*([^*]+)\*/g,'<em>$1</em>').replace(/^---$/gm,'<hr>');return'<p>'+h+'</p>';}
+<script>
+  function toast(m) { var t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); setTimeout(function(){t.classList.remove('show');},2000); }
+  function $(id) { return document.getElementById(id); }
+  function getData(d) { return (d&&d.data!==undefined)?d.data:d; }
 
-    document.querySelector('.md-toolbar')?.addEventListener('click',function(e){const b=e.target.closest('button[data-md]');if(!b)return;const tpl=b.dataset.md,ta=document.getElementById('announceContent'),s=ta.selectionStart,se=ta.selectionEnd,sel=ta.value.substring(s,se)||'text',ins=tpl.replace(/\$\{s\}/g,sel);ta.value=ta.value.substring(0,s)+ins+ta.value.substring(se);ta.focus();const c=s+ins.indexOf(sel)+sel.length;ta.setSelectionRange(c,c);});
-    document.getElementById('previewToggle')?.addEventListener('click',function(){const p=document.getElementById('announcePreview'),e=document.getElementById('announceContent');if(p.style.display==='none'){p.innerHTML=mdToHtml(e.value);p.style.display='block';e.style.display='none';this.textContent='✏ 编辑';}else{p.style.display='none';e.style.display='';this.textContent='👁 预览';}});
+  // MD parser
+  function md2html(t) {
+    if(!t)return'';var h=t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    h=h.replace(/```([\s\S]*?)```/g,'<pre><code>$1</code></pre>');
+    h=h.replace(/^### (.+)$/gm,'<h3>$1</h3>');
+    h=h.replace(/^## (.+)$/gm,'<h2>$1</h2>');
+    h=h.replace(/^# (.+)$/gm,'<h1>$1</h1>');
+    h=h.replace(/^> (.+)$/gm,'<blockquote>$1</blockquote>');
+    h=h.replace(/^- (.+)$/gm,'<li>$1</li>');
+    h=h.replace(/^(\d+)\. (.+)$/gm,'<li>$2</li>');
+    h=h.replace(/`([^`]+)`/g,'<code>$1</code>');
+    h=h.replace(/!\[([^\]]*)\]\(([^)]+)\)/g,'<img src="$2" alt="$1">');
+    h=h.replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank">$1</a>');
+    h=h.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
+    h=h.replace(/\*([^*]+)\*/g,'<em>$1</em>');
+    h=h.replace(/^---$/gm,'<hr>');
+    return h;
+  }
 
-    async function checkSession(){try{const r=await fetch('/api/auth/check');const d=await r.json();if(!d.authenticated||d.role!=='admin'){window.location.href='/login.html';return null;}return d;}catch(e){window.location.href='/login.html';return null;}}
+  // MD toolbar
+  document.querySelector('.md-toolbar').addEventListener('click',function(e){
+    var b=e.target.closest('button[data-md]'); if(!b)return;
+    var tpl=b.dataset.md, ta=$('acontent'), s=ta.selectionStart, se=ta.selectionEnd;
+    var sel=ta.value.substring(s,se)||'text', ins=tpl.replace(/\$\{s\}/g,sel);
+    ta.value=ta.value.substring(0,s)+ins+ta.value.substring(se); ta.focus();
+    var c=s+ins.indexOf(sel)+sel.length; ta.setSelectionRange(c,c);
+  });
 
-    async function loadAnnouncements(){try{const r=await fetch('/api/admin/announcements');const d=await r.json();const list=d.data||[],t=document.getElementById('announceTableBody');if(!list.length){t.innerHTML='<tr><td colspan="5" style="text-align:center;color:#999">暂无公告</td></tr>';}else{t.innerHTML=list.map(a=>'<tr><td>'+a.id+'</td><td>'+a.title+'</td><td>'+(a.pinned?'<span class="badge badge-pinned">📌 置顶</span>':'-')+'</td><td>'+new Date(a.updatedAt).toLocaleString('zh-CN')+'</td><td><button class="action-btn action-btn-edit" onclick="editAnnounce('+a.id+')">编辑</button> <button class="action-btn action-btn-del" onclick="deleteAnnounce('+a.id+')">删除</button></td></tr>').join('');}document.getElementById('announceLoading').style.display='none';document.getElementById('announceTableWrapper').style.display='block';}catch(e){document.getElementById('announceLoading').textContent='加载失败: '+e.message;}}
-    window.editAnnounce=async function(id){try{const r=await fetch('/api/announcements/detail?id='+id);const d=await r.json();const a=d.data;document.getElementById('editAnnounceId').value=a.id;document.getElementById('announceTitle').value=a.title;document.getElementById('announceContent').value=a.content;document.getElementById('announcePinned').checked=a.pinned===1;document.getElementById('announceModalTitle').textContent='编辑公告';document.getElementById('announcePreview').style.display='none';document.getElementById('announcePreview').innerHTML='';document.getElementById('announceContent').style.display='';document.getElementById('previewToggle').textContent='👁 预览';document.getElementById('announceModal').classList.add('show');}catch(e){alert('加载失败');}};
-    window.deleteAnnounce=async function(id){if(!confirm('确定删除？'))return;try{const r=await fetch('/api/admin/announcements?id='+id,{method:'DELETE'});if(r.ok){showToast('已删除');loadAnnouncements();}else{const d=await r.json();alert(d.message);}}catch(e){alert('删除失败');}};
-    document.getElementById('addAnnounceBtn').addEventListener('click',function(){document.getElementById('editAnnounceId').value='';document.getElementById('announceTitle').value='';document.getElementById('announceContent').value='';document.getElementById('announcePinned').checked=false;document.getElementById('announceModalTitle').textContent='发布公告';document.getElementById('announcePreview').style.display='none';document.getElementById('announcePreview').innerHTML='';document.getElementById('announceContent').style.display='';document.getElementById('previewToggle').textContent='👁 预览';document.getElementById('announceModal').classList.add('show');});
-    document.getElementById('saveAnnounceBtn').addEventListener('click',async function(){const id=document.getElementById('editAnnounceId').value,title=document.getElementById('announceTitle').value.trim(),content=document.getElementById('announceContent').value,pinned=document.getElementById('announcePinned').checked?1:0;if(!title){alert('标题不能为空');return;}try{const method=id?'PUT':'POST',body=id?{id:parseInt(id),title,content,pinned}:{title,content,pinned};const r=await fetch('/api/admin/announcements',{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});if(r.ok){showToast(id?'已更新':'已发布');document.getElementById('announceModal').classList.remove('show');loadAnnouncements();}else{const d=await r.json();alert(d.message);}}catch(e){alert('保存失败');}});
-    document.getElementById('announceModalClose').addEventListener('click',()=>document.getElementById('announceModal').classList.remove('show'));
-    document.getElementById('announceModal').addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});
+  // preview toggle
+  $('pvwBtn').addEventListener('click',function(){
+    var p=$('apreview'), e=$('acontent');
+    if(p.style.display==='none'){p.innerHTML=md2html(e.value);p.style.display='block';e.style.display='none';this.textContent='✏ 编辑';}
+    else{p.style.display='none';e.style.display='';this.textContent='👁 预览';}
+  });
 
-    async function loadUsers(){try{const r=await fetch('/api/admin/users');const d=await r.json(),users=d.data,t=document.getElementById('usersTableBody');if(!users||!users.length){t.innerHTML='<tr><td colspan="6" style="text-align:center;color:#999">暂无用户</td></tr>';}else{t.innerHTML=users.map(u=>'<tr><td>'+u.id+'</td><td>'+u.username+'</td><td><span class="badge '+(u.role==='admin'?'badge-admin':'badge-user')+'">'+(u.role==='admin'?'管理员':'用户')+'</span></td><td><span class="badge '+(u.banned?'badge-banned':'badge-active')+'">'+(u.banned?'已封禁':'正常')+'</span></td><td>'+new Date(u.createdAt).toLocaleString('zh-CN')+'</td><td>'+(u.role!=='admin'?'<button class="action-btn '+(u.banned?'action-btn-unban':'action-btn-ban')+'" onclick="toggleBan('+u.id+','+(u.banned?0:1)+')">'+(u.banned?'解封':'封禁')+'</button>':'<span style="color:#999">-</span>')+'</td></tr>').join('');}document.getElementById('usersLoading').style.display='none';document.getElementById('usersTableWrapper').style.display='block';}catch(e){document.getElementById('usersLoading').textContent='加载失败: '+e.message;}}
-    window.toggleBan=async function(id,b){if(b&&!confirm('确定封禁？'))return;try{const r=await fetch('/api/admin/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:id,action:b?'ban':'unban'})});if(r.ok)loadUsers();else{const d=await r.json();alert(d.message);}}catch(e){alert('网络错误');}}
-    async function loadLogs(){try{const r=await fetch('/api/admin/logs');const d=await r.json(),logs=d.data,t=document.getElementById('logsTableBody');if(!logs||!logs.length){t.innerHTML='<tr><td colspan="4" style="text-align:center;color:#999">暂无记录</td></tr>';}else{t.innerHTML=logs.map(l=>'<tr><td>'+l.bookName+'-</td><td>'+l.author+'-</td><td>'+(l.format||'').toUpperCase()+'</td><td>'+new Date(l.createdAt).toLocaleString('zh-CN')+'</td></tr>').join('');}document.getElementById('logsLoading').style.display='none';document.getElementById('logsTableWrapper').style.display='block';}catch(e){document.getElementById('logsLoading').textContent='加载失败: '+e.message;}}
-    document.getElementById('logoutBtn').addEventListener('click',async()=>{await fetch('/api/auth/logout',{method:'POST'});window.location.href='/login.html';});
-    document.querySelectorAll('.tab').forEach(t=>{t.addEventListener('click',function(){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));this.classList.add('active');document.getElementById('tab-'+this.dataset.tab).classList.add('active');});});
+  // Check session
+  async function check(){
+    try{
+      var r=await fetch('/api/auth/check'); var d=await r.json(); var info=getData(d);
+      if(!info.authenticated || info.role!=='admin'){window.location.href='/login.html';return null;}
+      return info;
+    }catch(e){window.location.href='/login.html';return null;}
+  }
 
-    checkSession().then(s=>{if(s){loadAnnouncements();loadUsers();loadLogs();}});
-  </script>
+  // --- Announcements ---
+  async function loadA(){
+    try{
+      var r=await fetch('/api/admin/announcements'); var d=await r.json(); var list=getData(d);
+      var t=$('atbody');
+      if(!list||!list.length){t.innerHTML='<tr><td colspan="5" style="text-align:center;color:#999">暂无公告</td></tr>';}
+      else{t.innerHTML=list.map(function(a){return'<tr><td>'+a.id+'</td><td>'+a.title+'</td><td>'+(a.pinned?'<span class="badge badge-pinned">📌</span>':'-')+'</td><td>'+new Date(a.updatedAt).toLocaleString('zh-CN')+'</td><td><button class="action-btn action-btn-edit" onclick="editA('+a.id+')">编辑</button> <button class="action-btn action-btn-del" onclick="delA('+a.id+')">删除</button></td></tr>';}).join('');}
+      $('aload').style.display='none';$('awrap').style.display='block';
+    }catch(e){$('aload').textContent='加载失败';}
+  }
+
+  window.editA=async function(id){
+    try{
+      var r=await fetch('/api/announcements/detail?id='+id); var d=await r.json(); var a=getData(d);
+      $('aid').value=a.id;$('atitle').value=a.title;$('acontent').value=a.content||'';
+      $('apinned').checked=a.pinned===1;$('amtitle').textContent='编辑公告';
+      $('apreview').style.display='none';$('acontent').style.display='';$('pvwBtn').textContent='👁 预览';
+      $('amodal').classList.add('show');
+    }catch(e){alert('加载失败');}
+  };
+
+  window.delA=async function(id){
+    if(!confirm('确定删除？'))return;
+    try{var r=await fetch('/api/admin/announcements?id='+id,{method:'DELETE'}); if(r.ok){toast('已删除');loadA();}}catch(e){alert('删除失败');}
+  };
+
+  $('addAnnounceBtn').addEventListener('click',function(){
+    $('aid').value='';$('atitle').value='';$('acontent').value='';$('apinned').checked=false;
+    $('amtitle').textContent='发布公告';$('apreview').style.display='none';$('acontent').style.display='';
+    $('pvwBtn').textContent='👁 预览';$('amodal').classList.add('show');
+  });
+
+  $('asave').addEventListener('click',async function(){
+    var id=$('aid').value, title=$('atitle').value.trim(), content=$('acontent').value, pinned=$('apinned').checked?1:0;
+    if(!title){alert('标题不能为空');return;}
+    try{
+      var method=id?'PUT':'POST', body=id?{id:parseInt(id),title:title,content:content,pinned:pinned}:{title:title,content:content,pinned:pinned};
+      var r=await fetch('/api/admin/announcements',{method:method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+      if(r.ok){toast(id?'已更新':'已发布');$('amodal').classList.remove('show');loadA();}
+    }catch(e){alert('保存失败');}
+  });
+
+  $('amclose').addEventListener('click',function(){$('amodal').classList.remove('show')});
+  $('amodal').addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});
+
+  // --- Users ---
+  async function loadU(){
+    try{
+      var r=await fetch('/api/admin/users'); var d=await r.json(); var list=getData(d);
+      var t=$('utbody');
+      if(!list||!list.length){t.innerHTML='<tr><td colspan="6" style="text-align:center;color:#999">暂无用户</td></tr>';}
+      else{t.innerHTML=list.map(function(u){return'<tr><td>'+u.id+'</td><td>'+u.username+'</td><td><span class="badge '+(u.role==='admin'?'badge-admin':'badge-user')+'">'+(u.role==='admin'?'管理员':'用户')+'</span></td><td><span class="badge '+(u.banned?'badge-banned':'badge-active')+'">'+(u.banned?'已封禁':'正常')+'</span></td><td>'+new Date(u.createdAt).toLocaleString('zh-CN')+'</td><td>'+(u.role!=='admin'?'<button class="action-btn '+(u.banned?'action-btn-unban':'action-btn-ban')+'" onclick="toggleB('+u.id+','+(u.banned?0:1)+')">'+(u.banned?'解封':'封禁')+'</button>':'<span style="color:#999">-</span>')+'</td></tr>';}).join('');}
+      $('uload').style.display='none';$('uwrap').style.display='block';
+    }catch(e){$('uload').textContent='加载失败';}
+  }
+  window.toggleB=async function(id,b){if(b&&!confirm('确定封禁？'))return;try{var r=await fetch('/api/admin/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:id,action:b?'ban':'unban'})});if(r.ok)loadU();}catch(e){alert('网络错误');}};
+
+  // --- Logs ---
+  async function loadL(){
+    try{
+      var r=await fetch('/api/admin/logs'); var d=await r.json(); var list=getData(d);
+      var t=$('ltbody');
+      if(!list||!list.length){t.innerHTML='<tr><td colspan="4" style="text-align:center;color:#999">暂无记录</td></tr>';}
+      else{t.innerHTML=list.map(function(l){return'<tr><td>'+l.bookName+'</td><td>'+l.author+'</td><td>'+(l.format||'').toUpperCase()+'</td><td>'+new Date(l.createdAt).toLocaleString('zh-CN')+'</td></tr>';}).join('');}
+      $('lload').style.display='none';$('lwrap').style.display='block';
+    }catch(e){$('lload').textContent='加载失败';}
+  }
+
+  $('logoutBtn').addEventListener('click',async function(){await fetch('/api/auth/logout',{method:'POST'});window.location.href='/login.html';});
+
+  document.querySelectorAll('.tab').forEach(function(t){
+    t.addEventListener('click',function(){
+      document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('active');});
+      document.querySelectorAll('.tab-content').forEach(function(x){x.classList.remove('active');});
+      this.classList.add('active');$('tab-'+this.dataset.tab).classList.add('active');
+    });
+  });
+
+  check().then(function(s){if(s){loadA();loadU();loadL();}});
+</script>
 </body>
 </html>

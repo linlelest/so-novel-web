@@ -47,6 +47,8 @@ copy_files() {
     cp "target/app-jar-with-dependencies.jar" "$TARGET_DIR/app.jar"
     cp -r bundle/rules "$TARGET_DIR/"
     cp bundle/config.ini bundle/sonovel.l4j.ini bundle/readme.txt "$TARGET_DIR"
+    cp API.md "$TARGET_DIR"
+    echo "SoNovel 服务端改版 - Windows 版 (双击 app.jar 或运行启动器)" > "$TARGET_DIR/使用说明.txt"
 }
 
 extract_jre() {

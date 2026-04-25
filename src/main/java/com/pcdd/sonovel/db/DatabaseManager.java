@@ -1,10 +1,8 @@
 package com.pcdd.sonovel.db;
 
 import cn.hutool.core.lang.Console;
-import com.pcdd.sonovel.core.AppConfigLoader;
 import lombok.SneakyThrows;
 
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -22,9 +20,9 @@ public class DatabaseManager {
 
     @SneakyThrows
     private DatabaseManager() {
-        Path dbPath = Paths.get(AppConfigLoader.APP_CONFIG.getDownloadPath()).getParent();
-        if (dbPath == null) dbPath = Paths.get(".");
-        String dbFile = dbPath.resolve("sonovel.db").toAbsolutePath().toString();
+        // 以程序工作目录为数据库根目录
+        String dbDir = System.getProperty("user.dir");
+        String dbFile = Paths.get(dbDir, "sonovel.db").toAbsolutePath().toString();
         this.dbUrl = "jdbc:sqlite:" + dbFile;
         Console.log("📦 数据库路径: {}", dbFile);
         initTables();

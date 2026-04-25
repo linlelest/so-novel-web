@@ -242,11 +242,13 @@
   document.addEventListener('DOMContentLoaded', () => {
     let currentUser = null;
 
+    function getData(d) { return (d && d.data !== undefined) ? d.data : d; }
+
     async function checkAuth() {
       try {
         const resp = await fetch('/api/auth/check');
-        const data = await resp.json();
-        // AuthFilter 已保证此处必然已登录，直接取用户信息
+        const body = await resp.json();
+        const data = getData(body);
         currentUser = data;
         document.getElementById('displayUsername').textContent = data.username;
         document.getElementById('displayRole').textContent = data.role === 'admin' ? '(管理员)' : '';
@@ -312,13 +314,14 @@
     const fetchConfig = async () => {
       try {
         const resp = await fetch('/config')
-        const data = await resp.json()
-        if (data && data.data) {
-          serverConfig = data.data
+        const body = await resp.json()
+        const data = getData(body);
+        if (data) {
+          serverConfig = data
           clampSetting(settingSearchLimit, -1, 100, 10)
-          clampSetting(settingConcurrency, serverConfig.concurrency, 50)
-          versionTag.innerText = serverConfig.version
-          versionTag.href = `https://github.com/freeok/so-novel/releases/tag/v${serverConfig.version}`
+          clampSetting(settingConcurrency, data.concurrency, 50)
+          versionTag.innerText = data.version || ''
+          versionTag.href = `https://github.com/linlelest/so-novel-web/releases/tag/v${data.version}`
         }
       } catch (_) {
         clampSetting(settingSearchLimit, -1, 100, 10)
@@ -449,11 +452,12 @@
       showTip('正在刷新...')
       try {
         const response = await fetch('/local-books')
-        const data = await response.json()
-        if (data && data.data) {
-          data.data.sort((a, b) => b.timestamp - a.timestamp)
-          if (data.data[0]) latestFileName = data.data[0].name
-          renderLocalBooksTable(data.data)
+        const body = await response.json()
+        const data = getData(body);
+        if (data && data.length) {
+          data.sort((a, b) => b.timestamp - a.timestamp)
+          if (data[0]) latestFileName = data[0].name
+          renderLocalBooksTable(data)
         }
       } catch (error) { alert(`刷新已下书籍失败: ${error.message}`) }
       finally { hideTip() }
@@ -466,8 +470,9 @@
       searchButton.disabled = true; downloadSearchName.disabled = true
       try {
         const resp = await fetch(`/search/aggregated?kw=${encodeURIComponent(value)}`)
-        const data = await resp.json()
-        if (data && data.data) { currentPage = 1; renderDownloadTable(data.data) }
+        const body = await resp.json()
+        const data = getData(body);
+        if (data && data.length) { currentPage = 1; renderDownloadTable(data) }
       } catch (error) { alert(`搜索失败: ${error.message}`) }
       finally { hideTip(); downloadContainer.classList.add('expanded'); searchButton.disabled = false; downloadSearchName.disabled = false }
     }
@@ -493,9 +498,9 @@
 
     async function loadTokens() {
       try {
-        const resp = await fetch('/api/tokens')
-        const data = await resp.json()
-        const tokens = data.data || []
+        const resp = await fetch('/api/tokens');
+        const body = await resp.json();
+        const tokens = getData(body) || [];
         const baseUrl = location.origin
         if (tokens.length === 0) { tokenList.innerHTML = '<div class="token-empty">暂无 Token，创建一个开始使用吧</div>'; return }
         tokenList.innerHTML = tokens.map(t => {
@@ -527,7 +532,9 @@
       const note = document.getElementById('noteInput-' + id).value
       try {
         const resp = await fetch('/api/tokens', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, note }) })
-        if (resp.ok) { showToast('备注已更新'); loadTokens() }
+        const body = await resp.json();
+        if (resp.ok && body.code === 200) { showToast('备注已更新'); loadTokens() }
+        else { alert(body.message || '更新失败') }
       } catch (e) { alert('更新失败') }
     }
 
@@ -535,7 +542,9 @@
       if (!confirm('确定删除此 Token？')) return
       try {
         const resp = await fetch(`/api/tokens?id=${id}`, { method: 'DELETE' })
-        if (resp.ok) { showToast('Token 已删除'); loadTokens() }
+        const body = await resp.json();
+        if (resp.ok && body.code === 200) { showToast('Token 已删除'); loadTokens() }
+        else { alert(body.message || '删除失败') }
       } catch (e) { alert('删除失败') }
     }
 
@@ -547,8 +556,9 @@
       const note = newTokenNote.value.trim()
       try {
         const resp = await fetch('/api/tokens', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ note }) })
-        if (resp.ok) { showToast('Token 创建成功！'); newTokenNote.value = ''; loadTokens() }
-        else { const d = await resp.json(); alert(d.message || '创建失败') }
+        const body = await resp.json();
+        if (resp.ok && body.code === 200) { showToast('Token 创建成功！'); newTokenNote.value = ''; loadTokens() }
+        else { alert(body.message || '创建失败') }
       } catch (e) { alert('网络错误') }
     })
 
@@ -588,8 +598,8 @@
     async function loadAnnouncements() {
       try {
         const resp = await fetch('/api/announcements/list');
-        const d = await resp.json();
-        const list = d.data || [];
+        const body = await resp.json();
+        const list = getData(body) || [];
         if (list.length === 0) return;
         const section = document.getElementById('announcementSection');
         const container = document.getElementById('announcementList');
@@ -617,8 +627,9 @@
             if (contentDiv.textContent === '加载中...' || contentDiv.textContent === '加载中...') {
               try {
                 const r2 = await fetch('/api/announcements/detail?id=' + id);
-                const d2 = await r2.json();
-                contentDiv.innerHTML = mdToHtml(d2.data.content || '(空)');
+                const body2 = await r2.json();
+                const d2 = getData(body2);
+                contentDiv.innerHTML = mdToHtml(d2.content || '(空)');
               } catch(e) { contentDiv.textContent = '加载失败'; }
             }
             contentDiv.style.display = 'block';

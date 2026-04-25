@@ -9,7 +9,9 @@ GITHUB_USER="linlelest"
 REPO="so-novel-web"
 APP_NAME="sonovel"
 INSTALL_DIR="/opt/${APP_NAME}"
-NGINX_CONF="/etc/nginx/sites-enabled/${APP_NAME}"
+NGINX_AVAILABLE="/etc/nginx/sites-available/${APP_NAME}"
+NGINX_ENABLED="/etc/nginx/sites-enabled/${APP_NAME}"
+NGINX_DEFAULT="/etc/nginx/sites-enabled/default"
 SERVICE_NAME="${APP_NAME}.service"
 SYSTEMD_PATH="/etc/systemd/system/${SERVICE_NAME}"
 WEBPATH="/sonovel-web"
@@ -117,12 +119,17 @@ StandardError=journal
 WantedBy=multi-user.target
 EOF
 
-# Nginx 配置
-cat > "$NGINX_CONF" << EOF
+# Nginx 配置 — 使用 sites-available + symlink 标准做法
+# 删除默认站点，避免 80 端口冲突
+rm -f "$NGINX_DEFAULT" "$NGINX_ENABLED"
+
+cat > "$NGINX_AVAILABLE" << EOF
 server {
     listen 80;
+    server_name _;
 
-    location ${WEBPATH}/ {
+    # /sonovel-web 不带斜杠也匹配
+    location ${WEBPATH} {
         proxy_pass http://127.0.0.1:${PORT}/;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
@@ -131,13 +138,14 @@ server {
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection "upgrade";
-        # 大文件下载超时
         proxy_read_timeout 600s;
         proxy_send_timeout 600s;
         client_max_body_size 50m;
     }
 }
 EOF
+
+ln -sf "$NGINX_AVAILABLE" "$NGINX_ENABLED"
 
 # 启动服务
 systemctl daemon-reload
