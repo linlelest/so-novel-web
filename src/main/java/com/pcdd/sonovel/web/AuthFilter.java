@@ -77,7 +77,7 @@ public class AuthFilter implements Filter {
         HttpServletResponse resp = (HttpServletResponse) response;
         String path = req.getRequestURI();
 
-        // 静态资源和公开路径放行
+        // 公开路径放行（无需登录）
         if (isPublicPath(path)) {
             chain.doFilter(request, response);
             return;
@@ -113,10 +113,16 @@ public class AuthFilter implements Filter {
             }
         }
 
-        // 认证失败，返回 401
-        resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        resp.setContentType("application/json;charset=UTF-8");
-        resp.getWriter().println(JSONUtil.toJsonStr(JsonResponse.error(401, "未登录或 Token 无效，请先登录或提供有效 token")));
+        // 认证失败：浏览器请求重定向到登录页，API 请求返回 401
+        String accept = req.getHeader("Accept");
+        boolean isBrowser = accept != null && (accept.contains("text/html") || accept.contains("application/xhtml"));
+        if (isBrowser || path.equals("/") || path.equals("/index.html") || !path.startsWith("/api/")) {
+            resp.sendRedirect("/login.html");
+        } else {
+            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            resp.setContentType("application/json;charset=UTF-8");
+            resp.getWriter().println(JSONUtil.toJsonStr(JsonResponse.error(401, "未登录或 Token 无效，请先登录或提供有效 token")));
+        }
     }
 
     private String extractSessionId(HttpServletRequest req) {
@@ -137,17 +143,13 @@ public class AuthFilter implements Filter {
         // 前缀匹配
         if (path.startsWith("/api/auth/")) return true;
         if (path.startsWith("/api/public/")) return true;
-        if (path.equals("/")) return true; // 首页 (会重定向或显示登录页)
-        if (path.equals("/index.html")) return true;
-        // 静态资源 (HTML, CSS, JS, 图标)
-        if (path.endsWith(".html") || path.endsWith(".css") || path.endsWith(".js")
+        // 静态资源 (CSS, JS, 图标, 图片 — 不含 HTML)
+        if (path.endsWith(".css") || path.endsWith(".js")
                 || path.endsWith(".ico") || path.endsWith(".png") || path.endsWith(".svg")) {
-            // login.html, register.html 公开; 其他 html 需认证
-            if (path.endsWith(".html")) {
-                return path.equals("/login.html") || path.equals("/register.html");
-            }
             return true;
         }
+        // login.html / register.html 公开; 其他 html 需认证
+        if (path.equals("/login.html") || path.equals("/register.html")) return true;
         return false;
     }
 

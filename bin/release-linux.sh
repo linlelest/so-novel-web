@@ -61,6 +61,9 @@ mkdir -p "target/$DIST_DIRNAME"
 cp "bundle/$JRE_FILENAME" "target/$DIST_DIRNAME"
 cp -r bundle/rules "target/$DIST_DIRNAME"
 cp bundle/config.ini bundle/readme.txt bundle/run-linux.sh "target/$DIST_DIRNAME"
+cp API.md "target/$DIST_DIRNAME"
+
+echo "SoNovel 服务端改版 - 基于 freeok/so-novel 改造" > "target/$DIST_DIRNAME/ABOUT.txt"
 
 # 移动 jar 包
 cd target

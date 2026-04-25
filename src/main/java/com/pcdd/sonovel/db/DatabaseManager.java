@@ -99,6 +99,17 @@ public class DatabaseManager {
                         created_at INTEGER NOT NULL
                     )
                     """);
+            // 公告表
+            stmt.execute("""
+                    CREATE TABLE IF NOT EXISTS announcements (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        title TEXT NOT NULL,
+                        content TEXT NOT NULL,
+                        pinned INTEGER NOT NULL DEFAULT 0,
+                        created_at INTEGER NOT NULL,
+                        updated_at INTEGER NOT NULL
+                    )
+                    """);
         }
     }
 

@@ -58,6 +58,10 @@ public class WebServer {
         context.addServlet(AdminServlet.class, "/api/admin/*");
         context.addServlet(HistoryServlet.class, "/api/history");
 
+        // 公告
+        context.addServlet(AnnouncementServlet.class, "/api/announcements/*");
+        context.addServlet(AnnouncementServlet.class, "/api/admin/announcements");
+
         // 默认 Servlet 提供静态文件
         ServletHolder staticHolder = new ServletHolder("default", DefaultServlet.class);
         staticHolder.setInitParameter("dirAllowed", "false");

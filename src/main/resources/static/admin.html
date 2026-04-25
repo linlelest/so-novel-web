@@ -5,131 +5,75 @@
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
   <title>SoNovel - 管理后台</title>
   <style>
-    :root {
-      --primary: #5d5d81;
-      --primary-hover: #7b7b9d;
-      --bg: #f8f9fa;
-      --card-bg: #fff;
-      --text: #333;
-      --text-secondary: #666;
-      --border: #e5e5e5;
-      --danger: #e74c3c;
-      --success: #27ae60;
-    }
+    :root { --primary: #5d5d81; --primary-hover: #7b7b9d; --bg: #f8f9fa; --card-bg: #fff; --text: #333; --text-secondary: #666; --border: #e5e5e5; --danger: #e74c3c; --success: #27ae60; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
-      background: var(--bg);
-      min-height: 100vh;
-      color: var(--text);
-    }
-    .header {
-      background: var(--card-bg);
-      border-bottom: 1px solid var(--border);
-      padding: 16px 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
+    body { font-family: -apple-system,'PingFang SC','Microsoft YaHei',sans-serif; background: var(--bg); min-height: 100vh; color: var(--text); }
+    .header { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
     .header h1 { font-size: 1.3rem; color: var(--primary); }
     .header-actions { display: flex; gap: 12px; align-items: center; }
-    .header-actions .btn {
-      padding: 8px 16px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: var(--card-bg);
-      cursor: pointer;
-      font-size: 0.85rem;
-      color: var(--text);
-      text-decoration: none;
-      transition: all 0.2s;
-    }
+    .header-actions .btn { padding: 8px 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--card-bg); cursor: pointer; font-size: 0.85rem; color: var(--text); text-decoration: none; transition: all .2s; }
     .header-actions .btn:hover { border-color: var(--primary); color: var(--primary); }
     .header-actions .btn-danger { color: var(--danger); border-color: var(--danger); }
     .header-actions .btn-danger:hover { background: var(--danger); color: #fff; }
-    .container {
-      max-width: 1200px;
-      margin: 24px auto;
-      padding: 0 24px;
-    }
-    .card {
-      background: var(--card-bg);
-      border-radius: 12px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-      padding: 24px;
-      margin-bottom: 24px;
-    }
-    .card h2 {
-      font-size: 1.1rem;
-      margin-bottom: 16px;
-      color: var(--primary);
-      border-left: 3px solid var(--primary);
-      padding-left: 10px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    th, td {
-      padding: 10px 12px;
-      text-align: left;
-      border-bottom: 1px solid var(--border);
-      font-size: 0.9rem;
-    }
-    th {
-      background: var(--bg);
-      color: var(--text-secondary);
-      font-weight: 600;
-    }
-    .badge {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 0.8rem;
-    }
+    .container { max-width: 1200px; margin: 24px auto; padding: 0 24px; }
+    .card { background: var(--card-bg); border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,.06); padding: 24px; margin-bottom: 24px; }
+    .card h2 { font-size: 1.1rem; margin-bottom: 16px; color: var(--primary); border-left: 3px solid var(--primary); padding-left: 10px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: .9rem; }
+    th { background: var(--bg); color: var(--text-secondary); font-weight: 600; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: .8rem; }
     .badge-admin { background: #f0f9eb; color: #529b2e; }
     .badge-user { background: #f0f2f5; color: #666; }
     .badge-banned { background: #fef0f0; color: #e74c3c; }
     .badge-active { background: #f0f9eb; color: #27ae60; }
-    .action-btn {
-      padding: 4px 12px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 0.85rem;
-      transition: all 0.2s;
-    }
+    .badge-pinned { background: #fef6e4; color: #e6a23c; }
+    .action-btn { padding: 4px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: .85rem; transition: all .2s; }
     .action-btn-ban { background: #fef0f0; color: #e74c3c; }
     .action-btn-ban:hover { background: #e74c3c; color: #fff; }
     .action-btn-unban { background: #f0f9eb; color: #27ae60; }
     .action-btn-unban:hover { background: #27ae60; color: #fff; }
-    .tabs {
-      display: flex;
-      gap: 0;
-      margin-bottom: 20px;
-      border-bottom: 2px solid var(--border);
-    }
-    .tab {
-      padding: 10px 20px;
-      cursor: pointer;
-      font-size: 0.9rem;
-      color: var(--text-secondary);
-      border-bottom: 2px solid transparent;
-      margin-bottom: -2px;
-      transition: all 0.2s;
-    }
-    .tab.active {
-      color: var(--primary);
-      border-bottom-color: var(--primary);
-      font-weight: 600;
-    }
+    .action-btn-edit { background: #ecf5ff; color: #409eff; }
+    .action-btn-edit:hover { background: #409eff; color: #fff; }
+    .action-btn-del { background: #fef0f0; color: #e74c3c; }
+    .action-btn-del:hover { background: #e74c3c; color: #fff; }
+    .tabs { display: flex; gap: 0; margin-bottom: 20px; border-bottom: 2px solid var(--border); }
+    .tab { padding: 10px 20px; cursor: pointer; font-size: .9rem; color: var(--text-secondary); border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all .2s; }
+    .tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
     .tab:hover { color: var(--primary); }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
     .loading { text-align: center; padding: 40px; color: var(--text-secondary); }
+    .btn-primary { padding: 8px 20px; border: none; border-radius: 8px; background: var(--primary); color: #fff; cursor: pointer; font-size: .9rem; margin-bottom: 12px; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .md-toolbar { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px; background: var(--bg); border: 1px solid var(--border); border-bottom: none; border-radius: 8px 8px 0 0; }
+    .md-toolbar button { padding: 4px 10px; border: 1px solid var(--border); border-radius: 4px; background: var(--card-bg); cursor: pointer; font-size: .8rem; color: var(--text); transition: all .15s; }
+    .md-toolbar button:hover { border-color: var(--primary); color: var(--primary); }
+    .md-editor { width: 100%; min-height: 200px; padding: 12px; border: 1px solid var(--border); border-radius: 0 0 8px 8px; font-size: .9rem; font-family: 'Courier New',monospace; resize: vertical; outline: none; }
+    .md-editor:focus { border-color: var(--primary); }
+    .md-preview { padding: 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--card-bg); min-height: 100px; line-height: 1.7; }
+    .md-preview h1,.md-preview h2,.md-preview h3 { margin: 12px 0 8px; }
+    .md-preview p { margin: 6px 0; }
+    .md-preview code { background: var(--bg); padding: 2px 6px; border-radius: 4px; font-size: .85em; }
+    .md-preview pre { background: #282c34; color: #abb2bf; padding: 12px; border-radius: 8px; overflow-x: auto; }
+    .md-preview pre code { background: none; padding: 0; }
+    .md-preview ul,.md-preview ol { padding-left: 24px; }
+    .md-preview blockquote { border-left: 4px solid var(--primary); padding-left: 12px; color: var(--text-secondary); margin: 8px 0; }
+    .md-preview img { max-width: 100%; border-radius: 4px; }
+    .md-preview a { color: var(--primary); }
+    .modal-overlay { display: none; position: fixed; inset: 0; z-index: 2000; background: rgba(0,0,0,.5); align-items: center; justify-content: center; }
+    .modal-overlay.show { display: flex; }
+    .modal { background: var(--card-bg); border-radius: 16px; padding: 24px; width: 90%; max-width: 700px; max-height: 85vh; overflow-y: auto; }
+    .modal h3 { margin: 0 0 16px; color: var(--primary); }
+    .modal-close { float: right; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-secondary); }
+    .modal-close:hover { color: var(--text); }
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; margin-bottom: 4px; font-size: .9rem; font-weight: 500; }
+    .form-group input[type="text"] { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: .9rem; outline: none; }
+    .form-group input[type="text"]:focus { border-color: var(--primary); }
+    .form-group .checkbox-label { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: .9rem; }
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 10px 24px; border-radius: 8px; font-size: .85rem; z-index: 9999; opacity: 0; transition: opacity .3s; pointer-events: none; }
+    .toast.show { opacity: 1; }
+    @media (max-width:768px) { .md-toolbar { gap: 2px; } .md-toolbar button { padding: 4px 6px; font-size: .75rem; } }
   </style>
 </head>
 <body>
@@ -140,185 +84,105 @@
       <button class="btn btn-danger" id="logoutBtn">退出登录</button>
     </div>
   </div>
-
   <div class="container">
     <div class="tabs">
-      <div class="tab active" data-tab="users">用户管理</div>
-      <div class="tab" data-tab="logs">下载日志</div>
+      <div class="tab active" data-tab="announcements">📢 公告管理</div>
+      <div class="tab" data-tab="users">👥 用户管理</div>
+      <div class="tab" data-tab="logs">📋 下载日志</div>
     </div>
-
-    <!-- 用户管理 -->
-    <div class="tab-content active" id="tab-users">
+    <div class="tab-content active" id="tab-announcements">
+      <div class="card">
+        <h2>系统公告</h2>
+        <button class="btn-primary" id="addAnnounceBtn">+ 发布公告</button>
+        <div class="loading" id="announceLoading">加载中...</div>
+        <div id="announceTableWrapper" style="display:none">
+          <table><thead><tr><th>ID</th><th>标题</th><th>置顶</th><th>更新时间</th><th>操作</th></tr></thead><tbody id="announceTableBody"></tbody></table>
+        </div>
+      </div>
+    </div>
+    <div class="tab-content" id="tab-users">
       <div class="card">
         <h2>用户列表</h2>
         <div class="loading" id="usersLoading">加载中...</div>
         <div id="usersTableWrapper" style="display:none">
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>用户名</th>
-                <th>角色</th>
-                <th>状态</th>
-                <th>注册时间</th>
-                <th>操作</th>
-              </tr>
-            </thead>
-            <tbody id="usersTableBody"></tbody>
-          </table>
+          <table><thead><tr><th>ID</th><th>用户名</th><th>角色</th><th>状态</th><th>注册时间</th><th>操作</th></tr></thead><tbody id="usersTableBody"></tbody></table>
         </div>
       </div>
     </div>
-
-    <!-- 下载日志 -->
     <div class="tab-content" id="tab-logs">
       <div class="card">
         <h2>下载日志（全局）</h2>
         <div class="loading" id="logsLoading">加载中...</div>
         <div id="logsTableWrapper" style="display:none">
-          <table>
-            <thead>
-              <tr>
-                <th>用户</th>
-                <th>书名</th>
-                <th>格式</th>
-                <th>时间</th>
-              </tr>
-            </thead>
-            <tbody id="logsTableBody"></tbody>
-          </table>
+          <table><thead><tr><th>用户名</th><th>书名</th><th>格式</th><th>时间</th></tr></thead><tbody id="logsTableBody"></tbody></table>
         </div>
       </div>
     </div>
   </div>
 
+  <div class="modal-overlay" id="announceModal">
+    <div class="modal">
+      <button class="modal-close" id="announceModalClose">&times;</button>
+      <h3 id="announceModalTitle">发布公告</h3>
+      <input type="hidden" id="editAnnounceId">
+      <div class="form-group">
+        <label>公告标题</label>
+        <input type="text" id="announceTitle" placeholder="输入公告标题" maxlength="100">
+      </div>
+      <div class="form-group">
+        <label>内容（支持 Markdown）</label>
+        <div class="md-toolbar">
+          <button data-md="**${s}**" title="粗体">B</button>
+          <button data-md="*${s}*" title="斜体"><i>I</i></button>
+          <button data-md="# ${s}" title="标题1">H1</button>
+          <button data-md="## ${s}" title="标题2">H2</button>
+          <button data-md="### ${s}" title="标题3">H3</button>
+          <button data-md="[${s}](url)" title="链接">🔗</button>
+          <button data-md="![](${s})" title="图片">🖼</button>
+          <button data-md="\`${s}\`" title="行内代码">code</button>
+          <button data-md="\n\`\`\`\n${s}\n\`\`\`\n" title="代码块">```</button>
+          <button data-md="- ${s}" title="无序列表">•</button>
+          <button data-md="1. ${s}" title="有序列表">1.</button>
+          <button data-md="> ${s}" title="引用">❝</button>
+          <button data-md="---" title="分隔线">—</button>
+          <button id="previewToggle">👁 预览</button>
+        </div>
+        <textarea class="md-editor" id="announceContent" placeholder="输入公告内容（支持 Markdown 格式）"></textarea>
+        <div class="md-preview" id="announcePreview" style="display:none"></div>
+      </div>
+      <div class="form-group">
+        <label class="checkbox-label"><input type="checkbox" id="announcePinned"> 置顶此公告</label>
+      </div>
+      <button class="btn-primary" id="saveAnnounceBtn" style="width:100%">保存</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
   <script>
-    // 检查会话
-    async function checkSession() {
-      try {
-        const resp = await fetch('/api/auth/check');
-        const data = await resp.json();
-        if (!data.authenticated || data.role !== 'admin') {
-          window.location.href = '/login.html';
-          return null;
-        }
-        document.getElementById('usersLoading').textContent = '';
-        return data;
-      } catch (e) {
-        window.location.href = '/login.html';
-        return null;
-      }
-    }
+    function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000);}
+    function mdToHtml(t){if(!t)return'';let h=t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/^### (.+)$/gm,'<h3>$1</h3>').replace(/^## (.+)$/gm,'<h2>$1</h2>').replace(/^# (.+)$/gm,'<h1>$1</h1>').replace(/^> (.+)$/gm,'<blockquote>$1</blockquote>').replace(/^- (.+)$/gm,'<li>$1</li>').replace(/^(\d+)\. (.+)$/gm,'<li>$2</li>').replace(/```([\s\S]*?)```/g,'<pre><code>$1</code></pre>').replace(/`([^`]+)`/g,'<code>$1</code>').replace(/!\[([^\]]*)\]\(([^)]+)\)/g,'<img src="$2" alt="$1">').replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank">$1</a>').replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>').replace(/\*([^*]+)\*/g,'<em>$1</em>').replace(/^---$/gm,'<hr>');return'<p>'+h+'</p>';}
 
-    // 加载用户列表
-    async function loadUsers() {
-      try {
-        const resp = await fetch('/api/admin/users');
-        if (!resp.ok) throw new Error('无权访问');
-        const data = await resp.json();
-        const users = data.data;
-        const tbody = document.getElementById('usersTableBody');
-        
-        if (!users || users.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#999">暂无用户</td></tr>';
-        } else {
-          tbody.innerHTML = users.map(u => `
-            <tr>
-              <td>${u.id}</td>
-              <td>${u.username}</td>
-              <td><span class="badge ${u.role === 'admin' ? 'badge-admin' : 'badge-user'}">${u.role === 'admin' ? '管理员' : '用户'}</span></td>
-              <td><span class="badge ${u.banned ? 'badge-banned' : 'badge-active'}">${u.banned ? '已封禁' : '正常'}</span></td>
-              <td>${new Date(u.createdAt).toLocaleString('zh-CN')}</td>
-              <td>
-                ${u.role !== 'admin' ? `
-                  <button class="action-btn ${u.banned ? 'action-btn-unban' : 'action-btn-ban'}" 
-                          onclick="toggleBan(${u.id}, ${u.banned ? 0 : 1})">
-                    ${u.banned ? '解封' : '封禁'}
-                  </button>
-                ` : '<span style="color:#999">-</span>'}
-              </td>
-            </tr>
-          `).join('');
-        }
-        document.getElementById('usersLoading').style.display = 'none';
-        document.getElementById('usersTableWrapper').style.display = 'block';
-      } catch (e) {
-        document.getElementById('usersLoading').textContent = '加载失败: ' + e.message;
-      }
-    }
+    document.querySelector('.md-toolbar')?.addEventListener('click',function(e){const b=e.target.closest('button[data-md]');if(!b)return;const tpl=b.dataset.md,ta=document.getElementById('announceContent'),s=ta.selectionStart,se=ta.selectionEnd,sel=ta.value.substring(s,se)||'text',ins=tpl.replace(/\$\{s\}/g,sel);ta.value=ta.value.substring(0,s)+ins+ta.value.substring(se);ta.focus();const c=s+ins.indexOf(sel)+sel.length;ta.setSelectionRange(c,c);});
+    document.getElementById('previewToggle')?.addEventListener('click',function(){const p=document.getElementById('announcePreview'),e=document.getElementById('announceContent');if(p.style.display==='none'){p.innerHTML=mdToHtml(e.value);p.style.display='block';e.style.display='none';this.textContent='✏ 编辑';}else{p.style.display='none';e.style.display='';this.textContent='👁 预览';}});
 
-    // 封禁/解封
-    async function toggleBan(userId, banned) {
-      if (banned && !confirm('确定要封禁该用户吗？')) return;
-      
-      try {
-        const resp = await fetch('/api/admin/users', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId, action: banned ? 'ban' : 'unban' })
-        });
-        if (resp.ok) {
-          loadUsers();
-        } else {
-          const data = await resp.json();
-          alert(data.message || '操作失败');
-        }
-      } catch (e) {
-        alert('网络错误');
-      }
-    }
+    async function checkSession(){try{const r=await fetch('/api/auth/check');const d=await r.json();if(!d.authenticated||d.role!=='admin'){window.location.href='/login.html';return null;}return d;}catch(e){window.location.href='/login.html';return null;}}
 
-    // 加载下载日志
-    async function loadLogs() {
-      try {
-        const resp = await fetch('/api/admin/logs');
-        if (!resp.ok) throw new Error('无权访问');
-        const data = await resp.json();
-        const logs = data.data;
-        const tbody = document.getElementById('logsTableBody');
-        
-        if (!logs || logs.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#999">暂无下载记录</td></tr>';
-        } else {
-          tbody.innerHTML = logs.map(log => `
-            <tr>
-              <td>${log.bookName || '-'}</td>
-              <td>${log.author || '-'}</td>
-              <td>${(log.format || '').toUpperCase()}</td>
-              <td>${new Date(log.createdAt).toLocaleString('zh-CN')}</td>
-            </tr>
-          `).join('');
-        }
-        document.getElementById('logsLoading').style.display = 'none';
-        document.getElementById('logsTableWrapper').style.display = 'block';
-      } catch (e) {
-        document.getElementById('logsLoading').textContent = '加载失败: ' + e.message;
-      }
-    }
+    async function loadAnnouncements(){try{const r=await fetch('/api/admin/announcements');const d=await r.json();const list=d.data||[],t=document.getElementById('announceTableBody');if(!list.length){t.innerHTML='<tr><td colspan="5" style="text-align:center;color:#999">暂无公告</td></tr>';}else{t.innerHTML=list.map(a=>'<tr><td>'+a.id+'</td><td>'+a.title+'</td><td>'+(a.pinned?'<span class="badge badge-pinned">📌 置顶</span>':'-')+'</td><td>'+new Date(a.updatedAt).toLocaleString('zh-CN')+'</td><td><button class="action-btn action-btn-edit" onclick="editAnnounce('+a.id+')">编辑</button> <button class="action-btn action-btn-del" onclick="deleteAnnounce('+a.id+')">删除</button></td></tr>').join('');}document.getElementById('announceLoading').style.display='none';document.getElementById('announceTableWrapper').style.display='block';}catch(e){document.getElementById('announceLoading').textContent='加载失败: '+e.message;}}
+    window.editAnnounce=async function(id){try{const r=await fetch('/api/announcements/detail?id='+id);const d=await r.json();const a=d.data;document.getElementById('editAnnounceId').value=a.id;document.getElementById('announceTitle').value=a.title;document.getElementById('announceContent').value=a.content;document.getElementById('announcePinned').checked=a.pinned===1;document.getElementById('announceModalTitle').textContent='编辑公告';document.getElementById('announcePreview').style.display='none';document.getElementById('announcePreview').innerHTML='';document.getElementById('announceContent').style.display='';document.getElementById('previewToggle').textContent='👁 预览';document.getElementById('announceModal').classList.add('show');}catch(e){alert('加载失败');}};
+    window.deleteAnnounce=async function(id){if(!confirm('确定删除？'))return;try{const r=await fetch('/api/admin/announcements?id='+id,{method:'DELETE'});if(r.ok){showToast('已删除');loadAnnouncements();}else{const d=await r.json();alert(d.message);}}catch(e){alert('删除失败');}};
+    document.getElementById('addAnnounceBtn').addEventListener('click',function(){document.getElementById('editAnnounceId').value='';document.getElementById('announceTitle').value='';document.getElementById('announceContent').value='';document.getElementById('announcePinned').checked=false;document.getElementById('announceModalTitle').textContent='发布公告';document.getElementById('announcePreview').style.display='none';document.getElementById('announcePreview').innerHTML='';document.getElementById('announceContent').style.display='';document.getElementById('previewToggle').textContent='👁 预览';document.getElementById('announceModal').classList.add('show');});
+    document.getElementById('saveAnnounceBtn').addEventListener('click',async function(){const id=document.getElementById('editAnnounceId').value,title=document.getElementById('announceTitle').value.trim(),content=document.getElementById('announceContent').value,pinned=document.getElementById('announcePinned').checked?1:0;if(!title){alert('标题不能为空');return;}try{const method=id?'PUT':'POST',body=id?{id:parseInt(id),title,content,pinned}:{title,content,pinned};const r=await fetch('/api/admin/announcements',{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});if(r.ok){showToast(id?'已更新':'已发布');document.getElementById('announceModal').classList.remove('show');loadAnnouncements();}else{const d=await r.json();alert(d.message);}}catch(e){alert('保存失败');}});
+    document.getElementById('announceModalClose').addEventListener('click',()=>document.getElementById('announceModal').classList.remove('show'));
+    document.getElementById('announceModal').addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});
 
-    // 登出
-    document.getElementById('logoutBtn').addEventListener('click', async () => {
-      await fetch('/api/auth/logout', { method: 'POST' });
-      window.location.href = '/login.html';
-    });
+    async function loadUsers(){try{const r=await fetch('/api/admin/users');const d=await r.json(),users=d.data,t=document.getElementById('usersTableBody');if(!users||!users.length){t.innerHTML='<tr><td colspan="6" style="text-align:center;color:#999">暂无用户</td></tr>';}else{t.innerHTML=users.map(u=>'<tr><td>'+u.id+'</td><td>'+u.username+'</td><td><span class="badge '+(u.role==='admin'?'badge-admin':'badge-user')+'">'+(u.role==='admin'?'管理员':'用户')+'</span></td><td><span class="badge '+(u.banned?'badge-banned':'badge-active')+'">'+(u.banned?'已封禁':'正常')+'</span></td><td>'+new Date(u.createdAt).toLocaleString('zh-CN')+'</td><td>'+(u.role!=='admin'?'<button class="action-btn '+(u.banned?'action-btn-unban':'action-btn-ban')+'" onclick="toggleBan('+u.id+','+(u.banned?0:1)+')">'+(u.banned?'解封':'封禁')+'</button>':'<span style="color:#999">-</span>')+'</td></tr>').join('');}document.getElementById('usersLoading').style.display='none';document.getElementById('usersTableWrapper').style.display='block';}catch(e){document.getElementById('usersLoading').textContent='加载失败: '+e.message;}}
+    window.toggleBan=async function(id,b){if(b&&!confirm('确定封禁？'))return;try{const r=await fetch('/api/admin/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:id,action:b?'ban':'unban'})});if(r.ok)loadUsers();else{const d=await r.json();alert(d.message);}}catch(e){alert('网络错误');}}
+    async function loadLogs(){try{const r=await fetch('/api/admin/logs');const d=await r.json(),logs=d.data,t=document.getElementById('logsTableBody');if(!logs||!logs.length){t.innerHTML='<tr><td colspan="4" style="text-align:center;color:#999">暂无记录</td></tr>';}else{t.innerHTML=logs.map(l=>'<tr><td>'+l.bookName+'-</td><td>'+l.author+'-</td><td>'+(l.format||'').toUpperCase()+'</td><td>'+new Date(l.createdAt).toLocaleString('zh-CN')+'</td></tr>').join('');}document.getElementById('logsLoading').style.display='none';document.getElementById('logsTableWrapper').style.display='block';}catch(e){document.getElementById('logsLoading').textContent='加载失败: '+e.message;}}
+    document.getElementById('logoutBtn').addEventListener('click',async()=>{await fetch('/api/auth/logout',{method:'POST'});window.location.href='/login.html';});
+    document.querySelectorAll('.tab').forEach(t=>{t.addEventListener('click',function(){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));this.classList.add('active');document.getElementById('tab-'+this.dataset.tab).classList.add('active');});});
 
-    // Tab 切换
-    document.querySelectorAll('.tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
-        tab.classList.add('active');
-        document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
-      });
-    });
-
-    // 初始化
-    checkSession().then(session => {
-      if (session) {
-        loadUsers();
-        loadLogs();
-      }
-    });
+    checkSession().then(s=>{if(s){loadAnnouncements();loadUsers();loadLogs();}});
   </script>
 </body>
 </html>
