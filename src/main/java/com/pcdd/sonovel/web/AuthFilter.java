@@ -122,7 +122,7 @@ public class AuthFilter implements Filter {
         String ip = r.getHeader("X-Forwarded-For"); if (ip!=null&&!ip.isEmpty()) return ip.split(",")[0].trim();
         return r.getRemoteAddr();
     }
-    static boolean isIpBanned(String ip) {
+    public static boolean isIpBanned(String ip) {
         try (Connection c = com.pcdd.sonovel.db.DatabaseManager.getInstance().getConnection();
              PreparedStatement ps = c.prepareStatement("SELECT 1 FROM ip_blacklist WHERE ip=? AND expires_at>?")) {
             ps.setString(1,ip); ps.setLong(2,System.currentTimeMillis()); return ps.executeQuery().next();
