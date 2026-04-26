@@ -1,6 +1,9 @@
 name: Releases
 
 on:
+  push:
+    tags:
+      - 'v*'
   workflow_dispatch:
     inputs:
       version:
@@ -66,9 +69,16 @@ jobs:
         with:
           name: windows-arm64
           path: dist
+      - name: Set release tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "RELEASE_TAG=v${{ github.event.inputs.version }}" >> $GITHUB_ENV
+          else
+            echo "RELEASE_TAG=${{ github.ref_name }}" >> $GITHUB_ENV
+          fi
       - uses: ncipollo/release-action@v1
         with:
-          tag: "v${{ github.event.inputs.version }}"
+          tag: ${{ env.RELEASE_TAG }}
           artifacts: "dist/*"
           token: ${{ secrets.GITHUB_TOKEN }}
           makeLatest: true
