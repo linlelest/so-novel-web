@@ -101,10 +101,8 @@ public class AuthFilter implements Filter {
                     }
                 }
             }
-            // Block non-admin
-            String accept = req.getHeader("Accept");
-            boolean browser = accept != null && (accept.contains("text/html") || accept.contains("application/xhtml"));
-            if (browser || path.equals("/") || path.equals("/index.html") || !path.startsWith("/api/")) {
+            // Block non-admin: browser→redirect, API→501 JSON
+            if (shouldRedirect(req)) {
                 resp.sendRedirect("/maintenance.html");
             } else {
                 resp.setStatus(501);
@@ -144,15 +142,27 @@ public class AuthFilter implements Filter {
             }
         }
 
-        // Not authed
-        String accept = req.getHeader("Accept");
-        boolean browser = accept != null && (accept.contains("text/html")||accept.contains("application/xhtml"));
-        if (browser || path.equals("/") || path.equals("/index.html") || !path.startsWith("/api/")) {
+        // Not authed: browser→redirect, API→401 JSON
+        if (shouldRedirect(req)) {
             resp.sendRedirect("/login.html");
         } else {
             resp.setStatus(401); resp.setContentType("application/json;charset=UTF-8");
             resp.getWriter().println(JSONUtil.toJsonStr(JsonResponse.error(401,"未登录或Token无效")));
         }
+    }
+
+    /** Returns true if the request is from a browser (should get redirect), false if it's an API call. */
+    private boolean shouldRedirect(HttpServletRequest req) {
+        String accept = req.getHeader("Accept");
+        boolean browser = accept != null && (accept.contains("text/html") || accept.contains("application/xhtml"));
+        if (browser) return true;
+        String p = req.getRequestURI();
+        // API endpoints that should NOT get redirected
+        if (p.startsWith("/api/") || p.equals("/config") || p.equals("/local-books")
+                || p.equals("/download-progress") || p.startsWith("/search") || p.startsWith("/book-"))
+            return false;
+        // Everything else (static pages, root, etc.) → redirect
+        return true;
     }
 
     private String extractSid(HttpServletRequest r) {
@@ -164,13 +174,13 @@ public class AuthFilter implements Filter {
         if (PUBLIC_PATHS.contains(p)) return true;
         if (p.startsWith("/api/auth/")) return true; if (p.startsWith("/api/public/")) return true;
         if (p.endsWith(".css")||p.endsWith(".js")||p.endsWith(".ico")||p.endsWith(".png")||p.endsWith(".svg")) return true;
-        if (p.equals("/login.html")||p.equals("/register.html")||p.equals("/maintenance.html")) return true;
+        if (p.equals("/login.html")||p.equals("/register.html")||p.equals("/maintenance.html")||p.equals("/api-docs.html")||p.equals("/api.md")) return true;
         return false;
     }
     /** Paths permitted through AuthFilter during maintenance mode — login, static resources, public API only. */
     private boolean isMaintenanceSafePath(String p) {
         if (p.endsWith(".css")||p.endsWith(".js")||p.endsWith(".ico")||p.endsWith(".png")||p.endsWith(".svg")) return true;
-        if (p.equals("/login.html")||p.equals("/maintenance.html")) return true;
+        if (p.equals("/login.html")||p.equals("/maintenance.html")||p.equals("/api-docs.html")||p.equals("/api.md")) return true;
         if (p.equals("/api/auth/login")||p.equals("/api/auth/check")||p.equals("/api/auth/check-admin")) return true;
         if (p.startsWith("/api/public/")) return true;
         return false;

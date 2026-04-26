@@ -1,0 +1,53 @@
+<!DOCTYPE html><html lang="zh"><head><meta charset="UTF-8"><meta content="width=device-width,initial-scale=1.0" name="viewport">
+<title>API 文档 - SoNovel</title>
+<style>:root{--primary:#5d5d81;--ph:#7b7b9d;--bg:#f8f9fa;--cb:#fff;--text:#333;--ts:#666;--border:#e5e5e5}[data-theme="dark"]{--bg:#1a1a2e;--cb:#16213e;--text:#e0e0e0;--ts:#a0a0a0;--border:#2a2a4a;--primary:#8b8bb0;--ph:#a0a0c0}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--text);transition:background .3s}
+.hd{background:var(--cb);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.hd h1{font-size:1.2rem;color:var(--primary)}.ha{display:flex;gap:8px;align-items:center}
+.btn{padding:6px 14px;border:1px solid var(--border);border-radius:8px;background:var(--cb);cursor:pointer;font-size:.8rem;color:var(--text);text-decoration:none;transition:all .2s}.btn:hover{border-color:var(--primary);color:var(--primary)}
+.btn-p{padding:6px 16px;border:none;border-radius:8px;background:var(--primary);color:#fff;cursor:pointer;font-size:.85rem;text-decoration:none}.btn-p:hover{background:var(--ph)}
+.thm-btn{background:none;border:1px solid var(--border);border-radius:20px;cursor:pointer;font-size:1.2rem;padding:4px 10px;color:var(--text)}.hd .ha .thm-btn{font-size:1rem}
+.container{max-width:960px;margin:0 auto;padding:24px 20px}
+.content{background:var(--cb);border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,.06);padding:32px 36px;line-height:1.8;font-size:.95rem;overflow-wrap:break-word}
+.content h1{font-size:1.6rem;color:var(--primary);border-bottom:2px solid var(--border);padding-bottom:8px;margin:28px 0 16px}.content h1:first-child{margin-top:0}
+.content h2{font-size:1.25rem;color:var(--primary);margin:24px 0 12px}.content h3{font-size:1.1rem;color:var(--text);margin:20px 0 10px}
+.content p{margin:8px 0}.content a{color:var(--primary)}.content code{background:var(--bg);padding:2px 6px;border-radius:4px;font-size:.85rem;font-family:'Courier New',monospace}
+.content pre{background:#282c34;color:#abb2bf;padding:16px;border-radius:8px;overflow-x:auto;margin:12px 0;font-size:.85rem;line-height:1.5}
+.content pre code{background:none;padding:0;color:inherit;font-size:inherit}
+.content blockquote{border-left:3px solid var(--primary);padding-left:14px;margin:12px 0;color:var(--ts)}.content table{border-collapse:collapse;width:100%;margin:12px 0}
+.content th,.content td{padding:8px 12px;text-align:left;border:1px solid var(--border);font-size:.85rem}.content th{background:var(--bg);font-weight:600;color:var(--ts)}
+.content ul,.content ol{padding-left:24px;margin:8px 0}.content li{margin:4px 0}
+.content strong{font-weight:700}.content hr{border:none;border-top:1px solid var(--border);margin:24px 0}
+.loading{text-align:center;padding:60px;color:var(--ts);font-size:1rem}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 24px;border-radius:8px;font-size:.85rem;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none}.toast.show{opacity:1}
+@media(max-width:768px){.container{padding:12px}.content{padding:16px 18px}}
+</style></head><body>
+<div class="hd"><h1>📖 SoNovel API 文档</h1><div class="ha"><button class="thm-btn" id="themeBtn" title="切换主题">🌓</button><a href="/" class="btn">返回首页</a><button class="btn-p" id="dlBtn">⬇ 下载文档</button></div></div>
+<div class="container"><div class="loading" id="load">加载文档中...</div><div class="content" id="content" style="display:none"></div></div>
+<div class="toast" id="toast"></div>
+<script>
+function $(id){return document.getElementById(id)}
+function t(m,c){var el=$('toast');el.textContent=m;el.className='toast show'+(c?' '+c:'');setTimeout(function(){el.classList.remove('show')},2500)}
+function gd(d){return(d&&d.data!==undefined)?d.data:d}
+
+var theme=localStorage.getItem('sonovel-theme')||'light';document.documentElement.setAttribute('data-theme',theme);
+$('themeBtn').addEventListener('click',function(){theme=theme==='light'?'dark':'light';document.documentElement.setAttribute('data-theme',theme);localStorage.setItem('sonovel-theme',theme);this.textContent=theme==='light'?'🌙':'☀️'});if(theme==='dark')$('themeBtn').textContent='☀️';
+
+function md2html(tx){if(!tx)return'<p style="color:var(--ts)">(空)</p>';var h=tx.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+h=h.replace(/```(\w*)\n([\s\S]*?)```/g,'<pre><code>$2</code></pre>');h=h.replace(/```([\s\S]*?)```/g,'<pre><code>$1</code></pre>');
+h=h.replace(/^### (.+)$/gm,'<h3>$1</h3>');h=h.replace(/^## (.+)$/gm,'<h2>$1</h2>');h=h.replace(/^# (.+)$/gm,'<h1>$1</h1>');
+h=h.replace(/^>\s(.+)$/gm,'<blockquote>$1</blockquote>');h=h.replace(/`([^`]+)`/g,'<code>$1</code>');
+h=h.replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank">$1</a>');
+h=h.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');h=h.replace(/\*([^*]+)\*/g,'<em>$1</em>');
+h=h.replace(/^- (.+)$/gm,'<li>$1</li>').replace(/(<li>.*<\/li>\n?)+/g,'<ul>$&</ul>');
+h=h.replace(/^\d+\.\s(.+)$/gm,'<li>$1</li>');
+var tbl=h.match(/\|.+\|.+\n\|[-| ]+\|\n(\|.+\|\n?)+/gm);if(tbl){tbl.forEach(function(m){var r=m.trim().split('\n');var html='<table>';for(var i=0;i<r.length;i++){if(i===1)continue;var tag=i===0?'th':'td';var c=r[i].split('|').filter(function(x){return x.trim()!==''});html+='<tr>'+c.map(function(x){return'<'+tag+'>'+x.trim()+'</'+tag+'>'}).join('')+'</tr>'}html+='</table>';h=h.replace(m,html)})}
+h=h.replace(/\n{2,}/g,'\n\n').split('\n\n').map(function(p){p=p.trim();if(!p)return'';if(/^<(h[1-6]|ul|ol|li|table|pre|blockquote)/.test(p))return p;return'<p>'+p.replace(/\n/g,'<br>')+'</p>'}).join('\n');return h}
+
+async function loadDoc(){try{var r=await fetch('/api.md?_='+Date.now());var tx=await r.text();$('content').innerHTML=md2html(tx);$('load').style.display='none';$('content').style.display='block'}catch(e){$('load').textContent='加载失败: '+e.message}}
+
+$('dlBtn').addEventListener('click',function(){var a=document.createElement('a');a.href='/api.md';a.download='API.md';document.body.appendChild(a);a.click();document.body.removeChild(a);t('开始下载')});
+
+loadDoc();
+</script></body></html>

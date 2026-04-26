@@ -36,6 +36,7 @@ table{width:100%;border-collapse:collapse}th,td{padding:6px 8px;text-align:left;
 <div class="hdr"><span class="ui"><span class="un" id="dun"></span><span id="drole"></span></span>
 <button class="thm-btn" id="themeBtn" title="主题">🌙</button>
 <button class="hdr-btn" id="setBtn">⚙设置</button>
+<a href="/api-docs.html" class="hdr-btn" target="_blank">📖API文档</a>
 <button class="hdr-btn" id="tkBtn">🔑Token</button>
 <a href="/admin.html" class="hdr-btn" id="adLink" style="display:none">管理</a>
 <button class="hdr-btn d" id="loBtn">退出</button></div></div>
@@ -63,7 +64,7 @@ table{width:100%;border-collapse:collapse}th,td{padding:6px 8px;text-align:left;
 
 <!-- Token modal -->
 <div class="modal-o" id="tkM"><div class="modal"><button class="mclose" id="tkMc">&times;</button><h2>🔑 API Token 管理</h2>
-<p style="font-size:.8rem;color:var(--ts);margin-bottom:12px">Token供第三方程序调用API。<br>格式：<code style="background:var(--bg);padding:2px 6px;border-radius:4px">http://服务器/?token=你的Token</code></p>
+<p style="font-size:.8rem;color:var(--ts);margin-bottom:12px">Token供第三方程序调用API。<br>使用方式详见 <a href="/api-docs.html" target="_blank" style="color:var(--primary)">API文档</a></p>
 <div class="tform"><input type="text" id="ntNote" placeholder="备注（如：下载脚本）" maxlength="50"><button id="ntBtn">创建</button></div><div id="tkList"></div></div></div>
 
 <div class="load-overlay" id="loadO" style="display:none"><div class="lo-spin"></div><div class="lo-txt" id="loadT">加载中...</div></div>
@@ -117,7 +118,7 @@ var item=e.target.closest('[data-f]');if(item){item.closest('.da').classList.rem
 document.addEventListener('click',function(){document.querySelectorAll('.da.open').forEach(function(el){el.classList.remove('open')})});
 async function hdts(idx,fmt){var item=bookCache[idx];if(!item){t('参数错误','e');return}showLoad('准备下载...');
 var p=new URLSearchParams(item);var fmt2=fmt||$('sf').value||'';if(fmt2)p.set('format',fmt2);if($('sl').value)p.set('language',$('sl').value);if($('sc').value)p.set('concurrency',$('sc').value);
-try{var r=await fetch('/book-fetch?'+p.toString());var d=await r.json();var data=gd(d);if(!r.ok||d.code!==200){t(d.message||'失败','e');hideLoad()}else{var fn=data.fileName||'';$('loadT').textContent='下载完成！'+fn;setTimeout(function(){hideLoad();if(fn)window.open('/book-download?filename='+encodeURIComponent(fn),'_blank');flb()},1500)}}catch(e){t('下载失败','e');hideLoad()}}
+try{var r=await fetch('/book-fetch?'+p.toString());var d=await r.json();var data=gd(d);if(!r.ok||d.code!==200){t(d.message||'失败','e');hideLoad()}else{var fn=data.fileName||'';$('loadT').textContent='下载完成！'+fn;setTimeout(function(){hideLoad();if(fn){var ifr=document.createElement('iframe');ifr.style.display='none';ifr.src='/book-download?filename='+encodeURIComponent(fn);document.body.appendChild(ifr)}flb()},1500)}}catch(e){t('下载失败','e');hideLoad()}}
 
 // Local books
 async function flb(){showLoad('正在刷新...');try{var r=await fetch('/local-books');var d=gd(await r.json());if(d&&d.length){d.sort(function(a,b){return b.timestamp-a.timestamp});if(d[0])lastFN=d[0].name;renderLB(d)}}catch(e){}finally{hideLoad()}}
@@ -129,16 +130,16 @@ function fd(ts){return new Date(ts).toLocaleString('zh-CN',{year:'numeric',month
 
 // Token
 var tkM=$('tkM');
-async function lt(){try{var r=await fetch('/api/tokens?_='+Date.now());var list=gd(await r.json())||[];var base=location.origin;if(!list.length){$('tkList').innerHTML='<div class="tempty">暂无Token</div>';return}
-$('tkList').innerHTML=list.map(function(t){var url=base+'/?token='+t.token;return'<div class="token-item"><div style="flex:2;min-width:120px"><div class="tv">'+t.token+'</div><div class="tfull" onclick="cp(\''+url+'\')">'+url+' 📋</div></div><div class="tn">'+(t.note||'无备注')+'</div><div class="tn" style="display:none" id="ne'+t.id+'"><input style="padding:3px 6px;border:1px solid var(--primary);border-radius:4px;font-size:.75rem;width:100px" type="text" value="'+(t.note||'')+'" id="ni'+t.id+'"><button style="padding:3px 8px;border:none;border-radius:4px;background:var(--primary);color:#fff;font-size:.7rem" onclick="sn('+t.id+')">保存</button></div><div class="ta"><button class="cp" onclick="cp(\''+t.token+'\')">复制</button><button class="ed" onclick="te('+t.id+')">备注</button><button class="dl" onclick="dt('+t.id+')">删除</button></div></div>'}).join('')}catch(e){console.error(e)}}
-window.cp=function(v){navigator.clipboard.writeText(v).then(function(){t('已复制')})}
+async function lt(){try{var r=await fetch('/api/tokens?_='+Date.now());var list=gd(await r.json())||[];if(!list.length){$('tkList').innerHTML='<div class="tempty">暂无Token</div>';return}
+$('tkList').innerHTML=list.map(function(t){return'<div class="token-item"><div style="flex:2;min-width:120px"><div class="tv" onclick="cp(\''+t.token+'\')" style="cursor:pointer;color:var(--primary);background:var(--bg);padding:6px 10px;border-radius:6px;border:1px solid var(--border);text-align:center;font-size:.85rem;transition:all .2s">'+t.token+' 📋</div></div><div class="tn">'+(t.note||'无备注')+'</div><div class="tn" style="display:none" id="ne'+t.id+'"><input style="padding:3px 6px;border:1px solid var(--primary);border-radius:4px;font-size:.75rem;width:100px" type="text" value="'+(t.note||'')+'" id="ni'+t.id+'"><button style="padding:3px 8px;border:none;border-radius:4px;background:var(--primary);color:#fff;font-size:.7rem" onclick="sn('+t.id+')">保存</button></div><div class="ta"><button class="ed" onclick="te('+t.id+')">备注</button><button class="dl" onclick="dt('+t.id+')">删除</button></div></div>'}).join('')}catch(e){console.error(e)}}
+window.cp=function(v){var ta=document.createElement('textarea');ta.value=v;ta.style.position='fixed';ta.style.left='-9999px';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');t('已复制')}catch(e){t('复制失败','e')}document.body.removeChild(ta)};
 window.te=function(id){document.getElementById('ne'+id).style.display='block';};
-window.sn=async function(id){var note=document.getElementById('ni'+id).value;try{var r=await fetch('/api/tokens',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id,note:note})});var d=await r.json();if(r.ok&&d.code===200){t('备注已更新');lt()}}catch(e){t('失败','e')}};
-window.dt=async function(id){if(!confirm('确定删除Token?'))return;try{var r=await fetch('/api/tokens?id='+id,{method:'DELETE'});var d=await r.json();if(r.ok&&d.code===200){t('已删除');lt()}else t(d.message||'删除失败','e')}catch(e){t('网络错误','e')}};
+window.sn=async function(id){var note=document.getElementById('ni'+id).value;try{var r=await fetch('/api/tokens',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id,note:note})});var d=await r.json();if(r.ok&&d.code===200){t('备注已更新');lt();tkM.classList.add('show')}}catch(e){t('失败','e')}};
 $('tkBtn').addEventListener('click',function(){tkM.classList.add('show');lt()});
 $('tkMc').addEventListener('click',function(){tkM.classList.remove('show')});
 tkM.addEventListener('click',function(e){if(e.target===tkM)tkM.classList.remove('show')});
-$('ntBtn').addEventListener('click',async function(){var note=$('ntNote').value.trim();try{var r=await fetch('/api/tokens',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({note:note})});var d=await r.json();if(r.ok&&d.code===200){t('创建成功');$('ntNote').value='';lt()}else t(d.message||'创建失败','e')}catch(e){t('网络错误','e')}});
+$('ntBtn').addEventListener('click',async function(){var note=$('ntNote').value.trim();try{var r=await fetch('/api/tokens',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({note:note})});var d=await r.json();if(r.ok&&d.code===200){t('创建成功');$('ntNote').value='';lt();tkM.classList.add('show')}else t(d.message||'创建失败','e')}catch(e){t('网络错误','e')}});
+window.dt=async function(id){if(!confirm('确定删除Token?'))return;try{var r=await fetch('/api/tokens?id='+id,{method:'DELETE'});var d=await r.json();if(r.ok&&d.code===200){t('已删除');lt();tkM.classList.add('show')}else t(d.message||'删除失败','e')}catch(e){t('网络错误','e')}};
 
 // Announcements
 async function la(){try{var r=await fetch('/api/announcements/list');var list=gd(await r.json())||[];if(!list.length)return;$('annSec').style.display='';

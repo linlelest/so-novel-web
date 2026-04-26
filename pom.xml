@@ -293,6 +293,9 @@
                                 <!-- JRE 目录，仅限 mvn 构建前指定 -DjrePath=runtime -->
                                 <path>${jrePath}</path>
                                 <minVersion>21</minVersion>
+                                <opts>
+                                    <opt>-Dfile.encoding=UTF-8</opt>
+                                </opts>
                             </jre>
                             <!-- Windows 资源管理器显示的可选版本信息 -->
                             <versionInfo>
