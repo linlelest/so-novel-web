@@ -18,7 +18,6 @@ public class RespUtils {
     @SneakyThrows
     public void writeError(HttpServletResponse resp, int code, String message) {
         writeJson(resp, JsonResponse.error(code, message));
-        resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
     }
 
     @SneakyThrows

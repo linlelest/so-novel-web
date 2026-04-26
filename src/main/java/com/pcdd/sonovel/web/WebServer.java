@@ -14,6 +14,15 @@ import static org.fusesource.jansi.AnsiRenderer.render;
 
 public class WebServer {
 
+    private static volatile Server INSTANCE;
+
+    public static void shutdown() {
+        Server s = INSTANCE;
+        if (s != null) {
+            try { s.stop(); } catch (Exception ignored) {}
+        }
+    }
+
     public void start() {
         int port = AppConfigLoader.APP_CONFIG.getWebPort();
         // 服务端模式下默认端口
@@ -21,6 +30,7 @@ public class WebServer {
             // 使用默认端口
         }
         Server server = new Server(port);
+        INSTANCE = server;
         ServletContextHandler context = createServletContext();
         registerServlets(context);
         registerFilters(context);

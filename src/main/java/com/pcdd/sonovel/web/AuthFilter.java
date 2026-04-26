@@ -65,11 +65,14 @@ public class AuthFilter implements Filter {
             return;
         }
 
-        if (isPublicPath(path)) { chain.doFilter(request, response); return; }
-
-        // Maintenance mode
+        // Maintenance mode (checked BEFORE public/private routing to block registration and non-admin access)
         String mm = configRepo.get("maintenance_mode");
         if ("true".equals(mm)) {
+            // Maintenance-safe paths: login, check, static resources, maintenance page
+            if (isMaintenanceSafePath(path)) {
+                chain.doFilter(request, response);
+                return;
+            }
             // Admin via session bypass
             String sid = extractSid(req);
             if (sid != null) {
@@ -110,6 +113,8 @@ public class AuthFilter implements Filter {
             }
             return;
         }
+
+        if (isPublicPath(path)) { chain.doFilter(request, response); return; }
 
         // Session
         String sid = extractSid(req);
@@ -160,6 +165,14 @@ public class AuthFilter implements Filter {
         if (p.startsWith("/api/auth/")) return true; if (p.startsWith("/api/public/")) return true;
         if (p.endsWith(".css")||p.endsWith(".js")||p.endsWith(".ico")||p.endsWith(".png")||p.endsWith(".svg")) return true;
         if (p.equals("/login.html")||p.equals("/register.html")||p.equals("/maintenance.html")) return true;
+        return false;
+    }
+    /** Paths permitted through AuthFilter during maintenance mode — login, static resources, public API only. */
+    private boolean isMaintenanceSafePath(String p) {
+        if (p.endsWith(".css")||p.endsWith(".js")||p.endsWith(".ico")||p.endsWith(".png")||p.endsWith(".svg")) return true;
+        if (p.equals("/login.html")||p.equals("/maintenance.html")) return true;
+        if (p.equals("/api/auth/login")||p.equals("/api/auth/check")||p.equals("/api/auth/check-admin")||p.equals("/api/auth/logout")) return true;
+        if (p.startsWith("/api/public/")) return true;
         return false;
     }
     private String getClientIp(HttpServletRequest r) {

@@ -129,7 +129,7 @@ function fd(ts){return new Date(ts).toLocaleString('zh-CN',{year:'numeric',month
 
 // Token
 var tkM=$('tkM');
-async function lt(){try{var r=await fetch('/api/tokens');var list=gd(await r.json())||[];var base=location.origin;if(!list.length){$('tkList').innerHTML='<div class="tempty">暂无Token</div>';return}
+async function lt(){try{var r=await fetch('/api/tokens?_='+Date.now());var list=gd(await r.json())||[];var base=location.origin;if(!list.length){$('tkList').innerHTML='<div class="tempty">暂无Token</div>';return}
 $('tkList').innerHTML=list.map(function(t){var url=base+'/?token='+t.token;return'<div class="token-item"><div style="flex:2;min-width:120px"><div class="tv">'+t.token+'</div><div class="tfull" onclick="cp(\''+url+'\')">'+url+' 📋</div></div><div class="tn">'+(t.note||'无备注')+'</div><div class="tn" style="display:none" id="ne'+t.id+'"><input style="padding:3px 6px;border:1px solid var(--primary);border-radius:4px;font-size:.75rem;width:100px" type="text" value="'+(t.note||'')+'" id="ni'+t.id+'"><button style="padding:3px 8px;border:none;border-radius:4px;background:var(--primary);color:#fff;font-size:.7rem" onclick="sn('+t.id+')">保存</button></div><div class="ta"><button class="cp" onclick="cp(\''+t.token+'\')">复制</button><button class="ed" onclick="te('+t.id+')">备注</button><button class="dl" onclick="dt('+t.id+')">删除</button></div></div>'}).join('')}catch(e){console.error(e)}}
 window.cp=function(v){navigator.clipboard.writeText(v).then(function(){t('已复制')})}
 window.te=function(id){document.getElementById('ne'+id).style.display='block';};

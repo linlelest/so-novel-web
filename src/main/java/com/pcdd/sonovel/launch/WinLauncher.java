@@ -2,7 +2,9 @@ package com.pcdd.sonovel.launch;
 
 import cn.hutool.core.lang.Console;
 import com.pcdd.sonovel.core.AppConfigLoader;
+import com.pcdd.sonovel.web.WebServer;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -19,23 +21,31 @@ public class WinLauncher {
     private static TrayIcon trayIcon;
 
     public static void launch() {
-        SwingUtilities.invokeLater(WinLauncher::startGui);
-    }
-
-    private static void startGui() {
         int port = AppConfigLoader.APP_CONFIG.getWebPort() > 0 ? AppConfigLoader.APP_CONFIG.getWebPort() : 7765;
         String host = getLocalHost();
         String url = "http://" + host + ":" + port;
         String loginUrl = url + "/login.html";
 
-        boolean openBrowser = showStartupDialog(host, port, loginUrl);
+        // Phase 1: startup dialog on EDT (blocking via invokeAndWait to capture return value)
+        boolean openBrowser;
+        try {
+            final boolean[] ref = new boolean[1];
+            SwingUtilities.invokeAndWait(() -> ref[0] = showStartupDialog(host, port, loginUrl));
+            openBrowser = ref[0];
+        } catch (Exception e) {
+            Console.error("Startup dialog failed: {}", e.getMessage());
+            openBrowser = false;
+        }
 
-        trayIcon = createTrayIcon(url, loginUrl);
-        addTrayToSystemTray(trayIcon);
+        // Phase 2: tray icon on EDT (non-blocking, EDT stays free to process menu events)
+        SwingUtilities.invokeLater(() -> {
+            trayIcon = createTrayIcon(url, loginUrl);
+            addTrayToSystemTray(trayIcon);
+        });
 
         if (openBrowser) openBrowser(loginUrl);
 
-        // 保持 EDT 存活，等待系统托盘事件
+        // Phase 3: keep main thread alive — EDT remains free to handle tray popup menu
         try { Thread.sleep(Long.MAX_VALUE); } catch (InterruptedException ignored) {}
     }
 
@@ -103,8 +113,9 @@ public class WinLauncher {
 
         MenuItem exitItem = new MenuItem("退出");
         exitItem.addActionListener(e -> {
-            // 移除托盘图标后强制退出 JVM
             try { SystemTray.getSystemTray().remove(trayIcon); } catch (Exception ignored) {}
+            // Graceful web server shutdown before force-exit JVM
+            WebServer.shutdown();
             Runtime.getRuntime().halt(0);
         });
         popup.add(exitItem);
@@ -116,19 +127,36 @@ public class WinLauncher {
     }
 
     private static Image loadTrayIcon() {
-        // 1. 尝试从 classpath 加载 logo.ico
+        // 1. PNG via ImageIO — most reliable across AWT/JDK versions
+        try (InputStream is = WinLauncher.class.getResourceAsStream("/static/logo.png")) {
+            if (is != null) {
+                BufferedImage bi = ImageIO.read(is);
+                if (bi != null) return bi;
+            }
+        } catch (Exception ignored) {}
+
+        // 2. ICO via Toolkit with correct MediaTracker waitForID(id, ms) timeout
         try (InputStream is = WinLauncher.class.getResourceAsStream("/static/logo.ico")) {
             if (is != null) {
                 byte[] data = is.readAllBytes();
                 Image img = Toolkit.getDefaultToolkit().createImage(data);
                 MediaTracker tracker = new MediaTracker(new Panel());
                 tracker.addImage(img, 0);
-                tracker.waitForID(1000); // 等待最多1秒
+                tracker.waitForID(0, 1000); // wait for image ID 0, timeout 1000ms
                 if (img.getWidth(null) > 0) return img;
             }
         } catch (Exception ignored) {}
 
-        // 2. 尝试从文件系统加载 (同级目录)
+        // 3. File-system PNG (packaged alongside exe)
+        try {
+            Path p = Paths.get(System.getProperty("user.dir"), "logo.png");
+            if (Files.exists(p)) {
+                BufferedImage bi = ImageIO.read(p.toFile());
+                if (bi != null) return bi;
+            }
+        } catch (Exception ignored) {}
+
+        // 4. File-system ICO with correct MediaTracker
         try {
             Path p = Paths.get(System.getProperty("user.dir"), "logo.ico");
             if (Files.exists(p)) {
@@ -136,12 +164,12 @@ public class WinLauncher {
                 Image img = Toolkit.getDefaultToolkit().createImage(data);
                 MediaTracker tracker = new MediaTracker(new Panel());
                 tracker.addImage(img, 0);
-                tracker.waitForID(500);
+                tracker.waitForID(0, 500);
                 if (img.getWidth(null) > 0) return img;
             }
         } catch (Exception ignored) {}
 
-        // 3. 绘制后备图标 (紫色圆+S)
+        // 5. Fallback drawn icon (purple circle + "S")
         BufferedImage bi = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = bi.createGraphics();
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -153,7 +181,15 @@ public class WinLauncher {
 
     private static void addTrayToSystemTray(TrayIcon ti) {
         try {
-            if (!SystemTray.isSupported()) { Console.error("系统托盘不支持"); return; }
+            if (!SystemTray.isSupported()) {
+                Console.error("系统托盘不支持");
+                // Show visible error dialog since tray icon is the entire UI
+                JOptionPane.showMessageDialog(null,
+                        "系统不支持托盘图标，请在控制台查看服务信息。\n访问: http://127.0.0.1:" + AppConfigLoader.APP_CONFIG.getWebPort() + "/login.html",
+                        "系统托盘不可用",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
             SystemTray.getSystemTray().add(ti);
         } catch (Exception e) {
             Console.error("添加托盘失败: {}", e.getMessage());

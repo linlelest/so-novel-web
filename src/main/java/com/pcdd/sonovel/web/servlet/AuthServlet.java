@@ -75,7 +75,13 @@ public class AuthServlet extends HttpServlet {
     private void logout(HttpServletRequest req, HttpServletResponse resp) {
         jakarta.servlet.http.Cookie[] cs = req.getCookies();
         if(cs!=null) for(var c : cs) if("sonovel_session".equals(c.getName())) {
-            AuthFilter.destroySession(c.getValue()); c.setMaxAge(0); c.setPath("/"); resp.addCookie(c);
+            AuthFilter.destroySession(c.getValue());
+            // Create NEW cookie for clearing (modifying request cookie is unreliable across containers)
+            jakarta.servlet.http.Cookie clearCookie = new jakarta.servlet.http.Cookie("sonovel_session", "");
+            clearCookie.setPath("/");
+            clearCookie.setMaxAge(0);
+            clearCookie.setHttpOnly(true);
+            resp.addCookie(clearCookie);
         }
         RespUtils.writeJson(resp, JSONUtil.createObj().set("message","已登出"));
     }
