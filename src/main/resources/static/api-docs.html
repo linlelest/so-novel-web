@@ -36,7 +36,7 @@ $('themeBtn').addEventListener('click',function(){theme=theme==='light'?'dark':'
 
 function md2html(tx){if(!tx)return'<p style="color:var(--ts)">(空)</p>';var h=tx.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 h=h.replace(/```(\w*)\n([\s\S]*?)```/g,'<pre><code>$2</code></pre>');h=h.replace(/```([\s\S]*?)```/g,'<pre><code>$1</code></pre>');
-h=h.replace(/^### (.+)$/gm,'<h3>$1</h3>');h=h.replace(/^## (.+)$/gm,'<h2>$1</h2>');h=h.replace(/^# (.+)$/gm,'<h1>$1</h1>');
+h=h.replace(/^### (.+)$/gm,function(m,t){var id=t.replace(/[^\w\u4e00-\u9fff]+/g,'-').replace(/^-+|-+$/g,'').toLowerCase();return'<h3 id="'+id+'">'+t+'</h3>'});h=h.replace(/^## (.+)$/gm,function(m,t){var id=t.replace(/[^\w\u4e00-\u9fff]+/g,'-').replace(/^-+|-+$/g,'').toLowerCase();return'<h2 id="'+id+'">'+t+'</h2>'});h=h.replace(/^# (.+)$/gm,function(m,t){var id=t.replace(/[^\w\u4e00-\u9fff]+/g,'-').replace(/^-+|-+$/g,'').toLowerCase();return'<h1 id="'+id+'">'+t+'</h1>'});
 h=h.replace(/^>\s(.+)$/gm,'<blockquote>$1</blockquote>');h=h.replace(/`([^`]+)`/g,'<code>$1</code>');
 h=h.replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank">$1</a>');
 h=h.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');h=h.replace(/\*([^*]+)\*/g,'<em>$1</em>');

@@ -21,6 +21,10 @@ public class WinLauncher {
     private static TrayIcon trayIcon;
 
     public static void launch() {
+        // Fix AWT font for Chinese text on Windows tray menus
+        System.setProperty("awt.useSystemAAFontSettings","on");
+        System.setProperty("swing.defaultlaf","com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
+
         int port = AppConfigLoader.APP_CONFIG.getWebPort() > 0 ? AppConfigLoader.APP_CONFIG.getWebPort() : 7765;
         String host = getLocalHost();
         String url = "http://" + host + ":" + port;

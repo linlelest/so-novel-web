@@ -60,12 +60,13 @@ public class BookFetchServlet extends HttpServlet {
                     .url(bookUrl)
                     .build();
 
-            // 先解析书籍名称/作者（用于历史记录，失败不影响下载）
+            // 预解析书籍名称/作者（用于历史记录，失败用占位符）
             String bookName = "未知书名", author = "";
             Rule rule = SourceUtils.getRule(bookUrl);
             try {
-                BookParser bp = new BookParser(AppConfigLoader.APP_CONFIG);
-                var bookInfo = bp.parse(bookUrl);
+                AppConfig tmpCfg = BeanUtil.copyProperties(AppConfigLoader.APP_CONFIG, AppConfig.class);
+                tmpCfg.setSourceId(rule.getId());
+                var bookInfo = new BookParser(tmpCfg).parse(bookUrl);
                 if (bookInfo != null) {
                     bookName = bookInfo.getBookName();
                     author = bookInfo.getAuthor();

@@ -32,8 +32,9 @@ table{width:100%;border-collapse:collapse}th,td{padding:6px 8px;text-align:left;
 @media(max-width:768px){.hdr{position:static;transform:none;margin-top:6px;justify-content:center;flex-wrap:wrap}.hd h1{font-size:1.8rem}.wrap{padding:10px}.search{flex-direction:column}.search .btn{width:100%}}
 </style></head><body>
 <div class="wrap">
-<div class="hd"><h1>SO NOVEL</h1><a id="vtag" class="vtag" target="_blank">version</a>
-<div class="hdr"><span class="ui"><span class="un" id="dun"></span><span id="drole"></span></span>
+<div class="hd"><div style="text-align:left;margin-bottom:4px"><span class="ui"><span class="un" id="dun"></span><span id="drole"></span></span></div>
+<h1 style="margin:0;color:var(--primary);font-size:2.5rem;letter-spacing:2px">SO NOVEL</h1><a id="vtag" class="vtag" target="_blank">version</a>
+<div class="hdr">
 <button class="thm-btn" id="themeBtn" title="主题">🌙</button>
 <button class="hdr-btn" id="setBtn">⚙设置</button>
 <a href="/api-docs.html" class="hdr-btn" target="_blank">📖API文档</a>
@@ -138,8 +139,8 @@ window.sn=async function(id){var note=document.getElementById('ni'+id).value;try
 $('tkBtn').addEventListener('click',function(){tkM.classList.add('show');lt()});
 $('tkMc').addEventListener('click',function(){tkM.classList.remove('show')});
 tkM.addEventListener('click',function(e){if(e.target===tkM)tkM.classList.remove('show')});
-$('ntBtn').addEventListener('click',async function(){var note=$('ntNote').value.trim();try{var r=await fetch('/api/tokens',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({note:note})});var d=await r.json();if(r.ok&&d.code===200){t('创建成功');$('ntNote').value='';lt();tkM.classList.add('show')}else t(d.message||'创建失败','e')}catch(e){t('网络错误','e')}});
-window.dt=async function(id){if(!confirm('确定删除Token?'))return;try{var r=await fetch('/api/tokens?id='+id,{method:'DELETE'});var d=await r.json();if(r.ok&&d.code===200){t('已删除');lt();tkM.classList.add('show')}else t(d.message||'删除失败','e')}catch(e){t('网络错误','e')}};
+$('ntBtn').addEventListener('click',async function(){var note=$('ntNote').value.trim();try{var r=await fetch('/api/tokens',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({note:note})});var d=await r.json();if(r.ok&&d.code===200){t('创建成功');$('ntNote').value='';setTimeout(function(){location.reload()},800)}else t(d.message||'创建失败','e')}catch(e){t('网络错误','e')}});
+window.dt=async function(id){if(!confirm('确定删除Token?'))return;try{var r=await fetch('/api/tokens?id='+id,{method:'DELETE'});var d=await r.json();if(r.ok&&d.code===200){t('已删除');setTimeout(function(){location.reload()},800)}else t(d.message||'删除失败','e')}catch(e){t('网络错误','e')}};
 
 // Announcements
 async function la(){try{var r=await fetch('/api/announcements/list');var list=gd(await r.json())||[];if(!list.length)return;$('annSec').style.display='';
