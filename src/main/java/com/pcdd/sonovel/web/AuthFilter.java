@@ -107,9 +107,9 @@ public class AuthFilter implements Filter {
             if (browser || path.equals("/") || path.equals("/index.html") || !path.startsWith("/api/")) {
                 resp.sendRedirect("/maintenance.html");
             } else {
-                resp.setStatus(503);
+                resp.setStatus(501);
                 resp.setContentType("application/json;charset=UTF-8");
-                resp.getWriter().println(JSONUtil.toJsonStr(JsonResponse.error(503, "网站正在更新升级中")));
+                resp.getWriter().println(JSONUtil.toJsonStr(JsonResponse.error(501, "正在维护中")));
             }
             return;
         }
@@ -171,7 +171,7 @@ public class AuthFilter implements Filter {
     private boolean isMaintenanceSafePath(String p) {
         if (p.endsWith(".css")||p.endsWith(".js")||p.endsWith(".ico")||p.endsWith(".png")||p.endsWith(".svg")) return true;
         if (p.equals("/login.html")||p.equals("/maintenance.html")) return true;
-        if (p.equals("/api/auth/login")||p.equals("/api/auth/check")||p.equals("/api/auth/check-admin")||p.equals("/api/auth/logout")) return true;
+        if (p.equals("/api/auth/login")||p.equals("/api/auth/check")||p.equals("/api/auth/check-admin")) return true;
         if (p.startsWith("/api/public/")) return true;
         return false;
     }

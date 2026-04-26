@@ -222,18 +222,21 @@ public class WinLauncher {
     private static void setAutoStart(boolean enable) {
         try {
             String workDir = System.getProperty("user.dir");
-            // launch4j 构建后 runtime 在 exe 同级目录
-            Path javaExe = Paths.get(workDir, "runtime", "bin", "javaw.exe");
-            Path jar = Paths.get(workDir, "app.jar");
-
-            if (!Files.exists(javaExe)) {
-                // fallback to system java
-                javaExe = Paths.get(System.getProperty("java.home"), "bin", "javaw.exe");
-                if (!Files.exists(javaExe)) return;
+            // Prefer sonovel.exe (Launch4j wrapper), fall back to app.jar + javaw
+            Path exe = Paths.get(workDir, "sonovel.exe");
+            String cmd;
+            if (Files.exists(exe)) {
+                cmd = "\"" + exe.toAbsolutePath() + "\"";
+            } else {
+                Path javaExe = Paths.get(workDir, "runtime", "bin", "javaw.exe");
+                Path jar = Paths.get(workDir, "app.jar");
+                if (!Files.exists(javaExe)) {
+                    javaExe = Paths.get(System.getProperty("java.home"), "bin", "javaw.exe");
+                    if (!Files.exists(javaExe)) return;
+                }
+                if (!Files.exists(jar)) return;
+                cmd = "\"" + javaExe + "\" -jar \"" + jar + "\"";
             }
-            if (!Files.exists(jar)) return;
-
-            String cmd = "\"" + javaExe + "\" -jar \"" + jar + "\"";
 
             if (enable) {
                 new ProcessBuilder("reg", "add",

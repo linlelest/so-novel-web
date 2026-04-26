@@ -24,11 +24,15 @@ public class MaintenanceServlet extends HttpServlet {
         String path = req.getRequestURI();
 
         if (path.equals("/api/admin/maintenance")) {
-            // 仅管理员可查看
             if (!"admin".equals(req.getAttribute("role"))) {
                 RespUtils.writeError(resp, 403, "仅管理员");
                 return;
             }
+        }
+
+        if (path.equals("/api/public/bannedlog")) {
+            listBannedLog(resp);
+            return;
         }
 
         // 公开和管理员都返回相同数据
@@ -38,6 +42,21 @@ public class MaintenanceServlet extends HttpServlet {
                 .set("enabled", "true".equals(enabled))
                 .set("reason", reason == null ? "" : reason);
         RespUtils.writeJson(resp, data);
+    }
+
+    private void listBannedLog(HttpServletResponse resp) {
+        java.util.List<JSONObject> list = new java.util.ArrayList<>();
+        try (java.sql.Connection c = com.pcdd.sonovel.db.DatabaseManager.getInstance().getConnection();
+             java.sql.Statement s = c.createStatement();
+             java.sql.ResultSet rs = s.executeQuery("SELECT * FROM banned_users_log ORDER BY created_at DESC")) {
+            while (rs.next()) list.add(JSONUtil.createObj()
+                    .set("id", rs.getInt("id"))
+                    .set("username", rs.getString("username"))
+                    .set("reason", rs.getString("reason"))
+                    .set("action", rs.getString("action"))
+                    .set("createdAt", rs.getLong("created_at")));
+        } catch (Exception e) {}
+        RespUtils.writeJson(resp, list);
     }
 
     @Override

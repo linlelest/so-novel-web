@@ -47,8 +47,8 @@ table{width:100%;border-collapse:collapse}th,td{padding:6px 8px;text-align:left;
 <div><label style="font-size:.85rem;display:block;margin-bottom:2px">每页</label><input type="number" id="sp" min="10" placeholder="默认" style="width:70px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:.85rem;background:var(--cb);color:var(--text)"></div>
 <div><label style="font-size:.85rem;display:block;margin-bottom:2px">并发</label><input type="number" id="sc" min="1" placeholder="默认" style="width:70px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:.85rem;background:var(--cb);color:var(--text)"></div></div></div>
 
-<!-- Banned log -->
-<div class="sec" id="banSec" style="display:none"><h2>🚫 严重违规·永久封号名单</h2><div id="banList"></div></div>
+<!-- Banned log (public, top of page) -->
+<div class="sec" id="banSec" style="display:none"><h2>🚫 违规封号名单</h2><div id="banList"></div></div>
 
 <!-- Announcements -->
 <div class="sec" id="annSec" style="display:none"><h2>📢 系统公告</h2><div id="annList"></div></div>
@@ -115,9 +115,9 @@ $('tb1').addEventListener('click',function(e){var pg=e.target.closest('.pg-btn')
 $('srTB').addEventListener('click',function(e){var tg=e.target.closest('.da-tg');if(tg){e.stopPropagation();var a=tg.closest('.da');document.querySelectorAll('.da.open').forEach(function(el){if(el!==a)el.classList.remove('open')});a.classList.toggle('open');return}
 var item=e.target.closest('[data-f]');if(item){item.closest('.da').classList.remove('open');hdts(parseInt(item.dataset.idx),item.dataset.f)}});
 document.addEventListener('click',function(){document.querySelectorAll('.da.open').forEach(function(el){el.classList.remove('open')})});
-async function hdts(idx,fmt){var item=bookCache[idx];if(!item){t('参数错误','e');return}showLoad('正在解析目录...');
+async function hdts(idx,fmt){var item=bookCache[idx];if(!item){t('参数错误','e');return}showLoad('准备下载...');
 var p=new URLSearchParams(item);var fmt2=fmt||$('sf').value||'';if(fmt2)p.set('format',fmt2);if($('sl').value)p.set('language',$('sl').value);if($('sc').value)p.set('concurrency',$('sc').value);
-try{var r=await fetch('/book-fetch?'+p.toString());var d=await r.json();if(!r.ok){t(d.message||'失败','e')}else{$('loadT').textContent='下载完成！文件保存到服务器';setTimeout(hideLoad,1500);flb()}}catch(e){t('下载失败','e');hideLoad()}}
+try{var r=await fetch('/book-fetch?'+p.toString());var d=await r.json();var data=gd(d);if(!r.ok||d.code!==200){t(d.message||'失败','e');hideLoad()}else{var fn=data.fileName||'';$('loadT').textContent='下载完成！'+fn;setTimeout(function(){hideLoad();if(fn)window.open('/book-download?filename='+encodeURIComponent(fn),'_blank');flb()},1500)}}catch(e){t('下载失败','e');hideLoad()}}
 
 // Local books
 async function flb(){showLoad('正在刷新...');try{var r=await fetch('/local-books');var d=gd(await r.json());if(d&&d.length){d.sort(function(a,b){return b.timestamp-a.timestamp});if(d[0])lastFN=d[0].name;renderLB(d)}}catch(e){}finally{hideLoad()}}
@@ -134,7 +134,7 @@ $('tkList').innerHTML=list.map(function(t){var url=base+'/?token='+t.token;retur
 window.cp=function(v){navigator.clipboard.writeText(v).then(function(){t('已复制')})}
 window.te=function(id){document.getElementById('ne'+id).style.display='block';};
 window.sn=async function(id){var note=document.getElementById('ni'+id).value;try{var r=await fetch('/api/tokens',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id,note:note})});var d=await r.json();if(r.ok&&d.code===200){t('备注已更新');lt()}}catch(e){t('失败','e')}};
-window.dt=async function(id){if(!confirm('确定删除Token?'))return;try{var r=await fetch('/api/tokens',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id})});var d=await r.json();if(r.ok&&d.code===200){t('已删除');lt()}}catch(e){t('删除失败','e')}};
+window.dt=async function(id){if(!confirm('确定删除Token?'))return;try{var r=await fetch('/api/tokens?id='+id,{method:'DELETE'});var d=await r.json();if(r.ok&&d.code===200){t('已删除');lt()}else t(d.message||'删除失败','e')}catch(e){t('网络错误','e')}};
 $('tkBtn').addEventListener('click',function(){tkM.classList.add('show');lt()});
 $('tkMc').addEventListener('click',function(){tkM.classList.remove('show')});
 tkM.addEventListener('click',function(e){if(e.target===tkM)tkM.classList.remove('show')});
@@ -148,7 +148,7 @@ if(bd.style.display==='none'||!bd.style.display){if(bd.textContent==='加载中.
 function m2h(tx){if(!tx)return'';var h=tx.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');h=h.replace(/```([\s\S]*?)```/g,'<pre><code>$1</code></pre>');h=h.replace(/^### (.+)$/gm,'<h3>$1</h3>');h=h.replace(/^## (.+)$/gm,'<h2>$1</h2>');h=h.replace(/^# (.+)$/gm,'<h1>$1</h1>');h=h.replace(/^> (.+)$/gm,'<blockquote>$1</blockquote>');h=h.replace(/`([^`]+)`/g,'<code>$1</code>');h=h.replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank">$1</a>');h=h.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');h=h.replace(/\*([^*]+)\*/g,'<em>$1</em>');return h}
 
 // Banned log
-async function lbl(){try{var r=await fetch('/api/admin/bannedlog');var list=gd(await r.json())||[];if(!list.length)return;$('banSec').style.display='';
+async function lbl(){try{var r=await fetch('/api/public/bannedlog');var list=gd(await r.json())||[];if(!list.length)return;$('banSec').style.display='';
 var top=list[0];var html='<div class="ban-top">⚠ <b>最新封号：</b>'+top.username+'，原因：'+top.reason+' ('+new Date(top.createdAt).toLocaleString('zh-CN')+')</div>';
 if(list.length>1){html+='<details><summary style="cursor:pointer;color:var(--ts);font-size:.8rem;padding:4px 0">查看全部 ('+list.length+'条记录)</summary><div style="padding:4px 0">'+list.slice(1).map(function(l){return'<p style="margin:2px 0;font-size:.8rem;color:var(--ts)">'+l.username+'，原因：'+l.reason+' ('+new Date(l.createdAt).toLocaleString('zh-CN')+')</p>'}).join('')+'</div></details>'}
 $('banList').innerHTML=html}catch(e){}}

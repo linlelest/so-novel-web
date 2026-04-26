@@ -60,10 +60,16 @@ public class UpdateService {
 
         String os = System.getProperty("os.name", "").toLowerCase();
         String workDir = System.getProperty("user.dir");
+        String proxy = configRepo.get("gh_update_proxy");
 
         if (os.contains("win")) {
             String dlUrl = getLatestDownloadUrl("windows_x64");
             if (dlUrl == null) return false;
+            // Apply proxy prefix only for download (not for check)
+            if (proxy != null && !proxy.isBlank()) {
+                dlUrl = proxy.replaceAll("/+$", "") + "/" + dlUrl;
+                Console.log("[update] 使用代理下载: {}", dlUrl);
+            }
             Path tmp = Paths.get(workDir, "sonovel-update.tar.gz");
             Console.log("[update] 下载更新包: {}", dlUrl);
             HttpUtil.downloadFile(dlUrl, tmp.toFile());
@@ -75,12 +81,18 @@ public class UpdateService {
             Console.log("[update] Windows 更新完成，exitCode={}", p.exitValue());
             return p.exitValue() == 0;
         } else {
+            String dlUrl = getLatestDownloadUrl("linux_x64");
+            if (dlUrl == null) return false;
+            if (proxy != null && !proxy.isBlank()) {
+                dlUrl = proxy.replaceAll("/+$", "") + "/" + dlUrl;
+                Console.log("[update] 使用代理下载: {}", dlUrl);
+            }
             Path script = Paths.get(workDir, "update.sh");
             if (!Files.exists(script)) {
                 Console.error("[update] update.sh 不存在: {}", script);
                 return false;
             }
-            Process p = new ProcessBuilder("bash", script.toString())
+            Process p = new ProcessBuilder("bash", script.toString(), dlUrl)
                     .directory(new File(workDir)).start();
             String out = IoUtil.readUtf8(p.getInputStream());
             Console.log("[update] {}", out);

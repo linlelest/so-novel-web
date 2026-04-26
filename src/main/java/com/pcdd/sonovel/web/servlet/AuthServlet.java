@@ -42,8 +42,9 @@ public class AuthServlet extends HttpServlet {
         if(user.isBanned()) { RespUtils.writeError(resp,403,"账号已被封禁，"+configRepo.get("contact_info")); return; }
         if(!userRepo.verifyPassword(user,pw)) { RespUtils.writeError(resp,401,"用户名或密码错误"); return; }
         String sid = AuthFilter.createSession(user.getId(),user.getUsername(),user.getRole());
+        boolean remember = b.getBool("remember", true);
         jakarta.servlet.http.Cookie ck = new jakarta.servlet.http.Cookie("sonovel_session",sid);
-        ck.setPath("/"); ck.setMaxAge(86400); ck.setHttpOnly(true); resp.addCookie(ck);
+        ck.setPath("/"); ck.setMaxAge(remember ? 604800 : -1); ck.setHttpOnly(true); resp.addCookie(ck);
         RespUtils.writeJson(resp, JSONUtil.createObj().set("username",user.getUsername()).set("role",user.getRole()));
     }
 

@@ -23,6 +23,8 @@ public class Main {
         if (EnvUtils.isProd()) {
             XRLog.listRegisteredLoggers().forEach(l -> XRLog.setLevel(l, java.util.logging.Level.OFF));
         }
+        // Ensure UTF-8 for tray icon text and console output
+        System.setProperty("file.encoding", "UTF-8");
     }
 
     public static void main(String[] args) {

@@ -97,6 +97,7 @@ public class AdminServlet extends HttpServlet {
     private void listConfig(HttpServletResponse resp) {
         Map<String,String> map = new LinkedHashMap<>();
         map.put("contact_info",configRepo.get("contact_info"));
+        map.put("gh_update_proxy",configRepo.get("gh_update_proxy"));
         map.put("api_search_rate",configRepo.get("api_search_rate"));
         map.put("api_download_rate",configRepo.get("api_download_rate"));
         map.put("web_search_rate",configRepo.get("web_search_rate"));

@@ -130,7 +130,8 @@ public class Crawler {
                     finalProgressBar.stepTo(currentIndex);
                 }
 
-                if (config.getWebEnabled() == 1 && (currentIndex % 50 == 0 || currentIndex == toc.size())) {
+                // Send SSE progress every 5 chapters or at completion
+                if (config.getWebEnabled() == 1 && (currentIndex % 5 == 0 || currentIndex == toc.size())) {
                     DownloadProgressSseServlet.sendProgress(JSONUtil.toJsonStr(DownloadProgressInfo.builder()
                             .type("download-progress")
                             .index(currentIndex)
