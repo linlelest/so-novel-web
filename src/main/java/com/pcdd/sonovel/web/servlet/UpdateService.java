@@ -2,7 +2,6 @@ package com.pcdd.sonovel.web.servlet;
 
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.lang.Console;
-import cn.hutool.core.util.VersionUtil;
 import cn.hutool.http.Header;
 import cn.hutool.http.HttpResponse;
 import cn.hutool.http.HttpUtil;
@@ -44,7 +43,7 @@ public class UpdateService {
             String url = latest.get("html_url", String.class);
             r.set("currentVersion", cur);
             r.set("latestVersion", lat);
-            r.set("hasUpdate", !cur.equals(lat) && VersionUtil.compare(cur, lat) < 0);
+            r.set("hasUpdate", !cur.equals(lat) && compareVersion(cur, lat) < 0);
             r.set("url", url);
         } catch (Exception e) {
             r.set("error", e.getMessage());
@@ -87,6 +86,21 @@ public class UpdateService {
             Console.log("[update] {}", out);
             return p.waitFor() == 0;
         }
+    }
+
+    /**
+     * 简单语义化版本比较。v1.0.0 → [1,0,0]，逐段比较
+     */
+    private static int compareVersion(String v1, String v2) {
+        String[] parts1 = v1.replace("v", "").split("\\.");
+        String[] parts2 = v2.replace("v", "").split("\\.");
+        int len = Math.max(parts1.length, parts2.length);
+        for (int i = 0; i < len; i++) {
+            int n1 = i < parts1.length ? Integer.parseInt(parts1[i]) : 0;
+            int n2 = i < parts2.length ? Integer.parseInt(parts2[i]) : 0;
+            if (n1 != n2) return Integer.compare(n1, n2);
+        }
+        return 0;
     }
 
     private static String getLatestDownloadUrl(String suffix) {
