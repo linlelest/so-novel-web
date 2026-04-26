@@ -55,43 +55,23 @@ public class BookFetchServlet extends HttpServlet {
                 }
             }
 
-            SearchResult sr = SearchResult.builder()
-                    .sourceId(id)
-                    .url(bookUrl)
-                    .build();
-
-            // 预解析书籍名称/作者（用于历史记录，失败用占位符）
-            String bookName = "未知书名", author = "";
+            SearchResult sr = SearchResult.builder().sourceId(id).url(bookUrl).build();
             Rule rule = SourceUtils.getRule(bookUrl);
-            try {
-                AppConfig tmpCfg = BeanUtil.copyProperties(AppConfigLoader.APP_CONFIG, AppConfig.class);
-                tmpCfg.setSourceId(rule.getId());
-                var bookInfo = new BookParser(tmpCfg).parse(bookUrl);
-                if (bookInfo != null) {
-                    bookName = bookInfo.getBookName();
-                    author = bookInfo.getAuthor();
-                }
-            } catch (Exception ignored) {}
-
             String finalFormat = StrUtil.isNotBlank(format) ? format.toLowerCase() : AppConfigLoader.APP_CONFIG.getExtName();
 
-            // 执行下载（带SSE进度推送）
-            double totalTimeSeconds = downloadFileToServer(sr, format, language, concurrency);
-            if (totalTimeSeconds == 0) {
+            // Execute download with SSE progress, get back output directory path
+            java.util.Map<String, Object> dlResult = downloadFileToServer(sr, format, language, concurrency, rule);
+            if (dlResult == null) {
                 RespUtils.writeError(resp, 500, "源站章节目录为空，中止下载");
                 return;
             }
+            double totalTimeSeconds = (double) dlResult.get("timeSeconds");
+            String bookName = (String) dlResult.getOrDefault("bookName", "未知书名");
+            String author = (String) dlResult.getOrDefault("author", "");
+            String actualFileName = (String) dlResult.getOrDefault("fileName", "");
+            long fileSize = (long) dlResult.getOrDefault("fileSize", 0L);
 
-            // Get actual download dir for filename
-            String downloadDir = AppConfigLoader.APP_CONFIG.getDownloadPath();
-            String fileNamePattern = com.pcdd.sonovel.util.FileUtils.sanitizeFileName(
-                    "%s (%s) %s".formatted(bookName, author, finalFormat.toUpperCase()));
-            java.io.File dir = new java.io.File(downloadDir, fileNamePattern);
-            java.io.File[] files = dir.listFiles((d, n) -> n.endsWith("." + finalFormat));
-            String actualFileName = (files != null && files.length > 0) ? files[0].getName() : "";
-            long fileSize = (files != null && files.length > 0) ? files[0].length() : 0;
-
-            // 记录下载历史
+            // Record download history
             try {
                 Integer userId = (Integer) req.getAttribute("userId");
                 String username = (String) req.getAttribute("username");
@@ -101,7 +81,6 @@ public class BookFetchServlet extends HttpServlet {
                 }
             } catch (Exception ignored) {}
 
-            // Return filename for frontend auto-download trigger
             var result = new java.util.HashMap<String, Object>();
             result.put("message", "下载完成");
             result.put("timeSeconds", totalTimeSeconds);
@@ -113,25 +92,54 @@ public class BookFetchServlet extends HttpServlet {
         }
     }
 
-    private double downloadFileToServer(SearchResult sr, String format, String language, Integer concurrency) {
+    private java.util.Map<String, Object> downloadFileToServer(SearchResult sr, String format, String language, Integer concurrency, Rule rule) {
         AppConfig cfg = BeanUtil.copyProperties(AppConfigLoader.APP_CONFIG, AppConfig.class);
         cfg.setSourceId(sr.getSourceId());
-
-        if (StrUtil.isNotBlank(format)) {
-            cfg.setExtName(format.toLowerCase());
-        }
-        if (StrUtil.isNotBlank(language)) {
-            cfg.setLanguage(language);
-        }
-        if (concurrency != null) {
-            cfg.setConcurrency(concurrency);
-        }
-
-        // Must register as web-mode so Crawler knows to send SSE progress
+        if (StrUtil.isNotBlank(format)) cfg.setExtName(format.toLowerCase());
+        if (StrUtil.isNotBlank(language)) cfg.setLanguage(language);
+        if (concurrency != null) cfg.setConcurrency(concurrency);
         cfg.setWebEnabled(1);
-        Console.log("<== 正在获取源站章节目录...");
 
-        return new Crawler(cfg).crawl(sr.getUrl());
+        Console.log("<== 正在获取源站章节目录...");
+        Crawler crawler = new Crawler(cfg);
+        double timeSeconds = crawler.crawl(sr.getUrl());
+        if (timeSeconds == 0) return null;
+
+        // Get output directory (same pattern Crawler uses)
+        String downloadPath = cfg.getDownloadPath();
+        String ext = cfg.getExtName().toUpperCase();
+        // List subdirectories in download path sorted by modification time (newest first)
+        java.io.File[] subdirs = new java.io.File(downloadPath)
+                .listFiles(f -> f.isDirectory() && f.getName().endsWith(" " + ext));
+        if (subdirs == null || subdirs.length == 0) {
+            // Fallback: grab most recently modified directory
+            subdirs = new java.io.File(downloadPath)
+                    .listFiles(java.io.File::isDirectory);
+        }
+        java.util.Arrays.sort(subdirs, (a, b) -> Long.compare(b.lastModified(), a.lastModified()));
+        java.io.File dir = subdirs[0];
+        String dirName = dir.getName(); // e.g. "凡人修仙传 (忘语) EPUB"
+        // Parse bookName and author from dir name: "书名 (作者) EXT"
+        String bookName = dirName, author = "";
+        int lp = dirName.lastIndexOf(" (");
+        int rp = dirName.lastIndexOf(") ");
+        if (lp > 0 && rp > lp) {
+            bookName = dirName.substring(0, lp);
+            author = dirName.substring(lp + 2, rp);
+        }
+
+        // Find the final output file
+        java.io.File[] files = dir.listFiles((d, n) -> n.endsWith("." + ext.toLowerCase()));
+        String fileName = (files != null && files.length > 0) ? files[0].getName() : "";
+        long fileSize = (files != null && files.length > 0) ? files[0].length() : 0L;
+
+        java.util.Map<String, Object> result = new java.util.HashMap<>();
+        result.put("timeSeconds", timeSeconds);
+        result.put("bookName", bookName);
+        result.put("author", author);
+        result.put("fileName", fileName);
+        result.put("fileSize", fileSize);
+        return result;
     }
 
 }

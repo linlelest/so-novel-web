@@ -102,32 +102,49 @@ public class WinLauncher {
     private static TrayIcon createTrayIcon(String url, String loginUrl) {
         Image image = loadTrayIcon();
 
-        PopupMenu popup = new PopupMenu();
+        TrayIcon ti = new TrayIcon(image, "SoNovel Web - " + url);
+        ti.setImageAutoSize(true);
+        ti.addActionListener(e -> {
+            // Show popup menu near mouse position
+            showTrayMenu(url, loginUrl);
+        });
+        return ti;
+    }
 
-        MenuItem openItem = new MenuItem("打开网页");
+    private static void showTrayMenu(String url, String loginUrl) {
+        JPopupMenu popup = new JPopupMenu();
+        Font menuFont = new Font("Microsoft YaHei", Font.PLAIN, 13);
+
+        JMenuItem openItem = new JMenuItem("打开网页");
+        openItem.setFont(menuFont);
         openItem.addActionListener(e -> openBrowser(loginUrl));
         popup.add(openItem);
         popup.addSeparator();
 
-        CheckboxMenuItem autoStartItem = new CheckboxMenuItem("开机自启");
+        JCheckBoxMenuItem autoStartItem = new JCheckBoxMenuItem("开机自启");
+        autoStartItem.setFont(menuFont);
         autoStartItem.setState(isAutoStartEnabled());
-        autoStartItem.addItemListener(e -> setAutoStart(autoStartItem.getState()));
+        autoStartItem.addActionListener(e -> setAutoStart(autoStartItem.getState()));
         popup.add(autoStartItem);
         popup.addSeparator();
 
-        MenuItem exitItem = new MenuItem("退出");
+        JMenuItem exitItem = new JMenuItem("退出");
+        exitItem.setFont(menuFont);
         exitItem.addActionListener(e -> {
             try { SystemTray.getSystemTray().remove(trayIcon); } catch (Exception ignored) {}
-            // Graceful web server shutdown before force-exit JVM
             WebServer.shutdown();
             Runtime.getRuntime().halt(0);
         });
         popup.add(exitItem);
 
-        TrayIcon ti = new TrayIcon(image, "SoNovel Web - " + url, popup);
-        ti.setImageAutoSize(true);
-        ti.addActionListener(e -> openBrowser(loginUrl));
-        return ti;
+        // Show popup near mouse pointer
+        PointerInfo pi = MouseInfo.getPointerInfo();
+        if (pi != null) {
+            Point p = pi.getLocation();
+            popup.show(null, p.x, p.y);
+        } else {
+            popup.show(null, 100, 100);
+        }
     }
 
     private static Image loadTrayIcon() {
