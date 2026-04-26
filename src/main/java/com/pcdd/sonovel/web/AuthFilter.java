@@ -123,22 +123,39 @@ public class AuthFilter implements Filter {
                 if (u != null && u.isBanned()) { destroySession(sid);
                     resp.setStatus(403); resp.setContentType("application/json;charset=UTF-8");
                     resp.getWriter().println(JSONUtil.toJsonStr(JsonResponse.error(403,"账号已被封禁，"+configRepo.get("contact_info")))); return; }
+                // If token explicitly provided, validate it even with valid session
+                String token = req.getParameter("token");
+                if (token != null) {
+                    Integer uid = tokenRepo.findUserIdByToken(token);
+                    if (uid == null || !uid.equals(sd.userId())) {
+                        // Token doesn't exist or belongs to different user → reject
+                        if (shouldRedirect(req)) { resp.sendRedirect("/login.html"); }
+                        else { resp.setStatus(401); resp.setContentType("application/json;charset=UTF-8");
+                            resp.getWriter().println(JSONUtil.toJsonStr(JsonResponse.error(401,"Token无效或不存在"))); }
+                        return;
+                    }
+                }
                 req.setAttribute("userId",sd.userId()); req.setAttribute("username",sd.username()); req.setAttribute("role",sd.role());
                 chain.doFilter(request, response); return;
             }
         }
 
-        // Token
+        // Token (standalone — no session)
         String token = req.getParameter("token");
         if (token != null) {
             Integer uid = tokenRepo.findUserIdByToken(token);
-            if (uid != null) {
-                AuthUser u = userRepo.findById(uid);
-                if (u != null && !u.isBanned()) {
-                    req.setAttribute("userId",u.getId()); req.setAttribute("username",u.getUsername()); req.setAttribute("role",u.getRole());
-                    req.setAttribute("authMethod","token");
-                    chain.doFilter(request, response); return;
-                }
+            if (uid == null) {
+                // Token doesn't exist → reject immediately with 401
+                if (shouldRedirect(req)) { resp.sendRedirect("/login.html"); }
+                else { resp.setStatus(401); resp.setContentType("application/json;charset=UTF-8");
+                    resp.getWriter().println(JSONUtil.toJsonStr(JsonResponse.error(401,"Token无效或不存在"))); }
+                return;
+            }
+            AuthUser u = userRepo.findById(uid);
+            if (u != null && !u.isBanned()) {
+                req.setAttribute("userId",u.getId()); req.setAttribute("username",u.getUsername()); req.setAttribute("role",u.getRole());
+                req.setAttribute("authMethod","token");
+                chain.doFilter(request, response); return;
             }
         }
 

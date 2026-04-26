@@ -139,8 +139,8 @@ window.sn=async function(id){var note=document.getElementById('ni'+id).value;try
 $('tkBtn').addEventListener('click',function(){tkM.classList.add('show');lt()});
 $('tkMc').addEventListener('click',function(){tkM.classList.remove('show')});
 tkM.addEventListener('click',function(e){if(e.target===tkM)tkM.classList.remove('show')});
-$('ntBtn').addEventListener('click',async function(){var note=$('ntNote').value.trim();try{var r=await fetch('/api/tokens',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({note:note})});var d=await r.json();if(r.ok&&d.code===200){t('创建成功');$('ntNote').value='';setTimeout(function(){location.reload()},800)}else t(d.message||'创建失败','e')}catch(e){t('网络错误','e')}});
-window.dt=async function(id){if(!confirm('确定删除Token?'))return;try{var r=await fetch('/api/tokens?id='+id,{method:'DELETE'});var d=await r.json();if(r.ok&&d.code===200){t('已删除');setTimeout(function(){location.reload()},800)}else t(d.message||'删除失败','e')}catch(e){t('网络错误','e')}};
+$('ntBtn').addEventListener('click',async function(){var note=$('ntNote').value.trim();try{var r=await fetch('/api/tokens',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({note:note})});var d=await r.json();if(r.ok&&d.code===200){t('创建成功','s');$('ntNote').value='';setTimeout(function(){t('请手动刷新页面以更新Token列表','s')},1500)}else t(d.message||'创建失败','e')}catch(e){t('网络错误','e')}});
+window.dt=async function(id){if(!confirm('确定删除Token?'))return;try{var r=await fetch('/api/tokens?id='+id,{method:'DELETE'});var d=await r.json();if(r.ok&&d.code===200){t('已删除','s');setTimeout(function(){t('请手动刷新页面以更新Token列表','s')},1500)}else t(d.message||'删除失败','e')}catch(e){t('网络错误','e')}};
 
 // Announcements
 async function la(){try{var r=await fetch('/api/announcements/list');var list=gd(await r.json())||[];if(!list.length)return;$('annSec').style.display='';
@@ -149,10 +149,11 @@ $('annList').addEventListener('click',async function(e){var btn=e.target.closest
 if(bd.style.display==='none'||!bd.style.display){if(bd.textContent==='加载中...'){try{var r2=await fetch('/api/announcements/detail?id='+id);var d2=gd(await r2.json());bd.innerHTML=m2h(d2.content||'(空)')}catch(e){bd.textContent='加载失败'}}bd.style.display='block';btn.textContent='收起'}else{bd.style.display='none';btn.textContent='展开阅读'}})}catch(e){}}
 function m2h(tx){if(!tx)return'';var h=tx.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');h=h.replace(/```([\s\S]*?)```/g,'<pre><code>$1</code></pre>');h=h.replace(/^### (.+)$/gm,'<h3>$1</h3>');h=h.replace(/^## (.+)$/gm,'<h2>$1</h2>');h=h.replace(/^# (.+)$/gm,'<h1>$1</h1>');h=h.replace(/^> (.+)$/gm,'<blockquote>$1</blockquote>');h=h.replace(/`([^`]+)`/g,'<code>$1</code>');h=h.replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank">$1</a>');h=h.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');h=h.replace(/\*([^*]+)\*/g,'<em>$1</em>');return h}
 
-// Banned log
-async function lbl(){try{var r=await fetch('/api/public/bannedlog');var list=gd(await r.json())||[];if(!list.length)return;$('banSec').style.display='';
+// Banned log — always visible on homepage, collapsed by default
+async function lbl(){try{var r=await fetch('/api/public/bannedlog');var list=gd(await r.json())||[];$('banSec').style.display='';
+if(!list.length){$('banList').innerHTML='<p style="font-size:.8rem;color:var(--ts);padding:4px 0">暂无封号记录</p>';return}
 var top=list[0];var html='<div class="ban-top">⚠ <b>最新封号：</b>'+top.username+'，原因：'+top.reason+' ('+new Date(top.createdAt).toLocaleString('zh-CN')+')</div>';
-if(list.length>1){html+='<details><summary style="cursor:pointer;color:var(--ts);font-size:.8rem;padding:4px 0">查看全部 ('+list.length+'条记录)</summary><div style="padding:4px 0">'+list.slice(1).map(function(l){return'<p style="margin:2px 0;font-size:.8rem;color:var(--ts)">'+l.username+'，原因：'+l.reason+' ('+new Date(l.createdAt).toLocaleString('zh-CN')+')</p>'}).join('')+'</div></details>'}
+if(list.length>1){html+='<details style="margin-top:4px"><summary style="cursor:pointer;color:var(--ts);font-size:.8rem;padding:4px 0">查看全部 ('+list.length+'条记录)</summary><div style="padding:4px 0">'+list.slice(1).map(function(l){return'<p style="margin:2px 0;font-size:.8rem;color:var(--ts)">'+l.username+'，原因：'+l.reason+' ('+new Date(l.createdAt).toLocaleString('zh-CN')+')</p>'}).join('')+'</div></details>'}
 $('banList').innerHTML=html}catch(e){}}
 
 // Logout
