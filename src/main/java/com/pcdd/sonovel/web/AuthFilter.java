@@ -153,6 +153,8 @@ public class AuthFilter implements Filter {
 
     /** Returns true if the request is from a browser (should get redirect), false if it's an API call. */
     private boolean shouldRedirect(HttpServletRequest req) {
+        // Any request with a token parameter is an API call — never redirect
+        if (req.getParameter("token") != null) return false;
         String accept = req.getHeader("Accept");
         boolean browser = accept != null && (accept.contains("text/html") || accept.contains("application/xhtml"));
         if (browser) return true;
