@@ -76,6 +76,6 @@ jobs:
         with:
           tag: "v${{ env.NEW_VER }}"
           artifacts: "dist/*"
-          body: "日常同步"v${{ env.UP_VER }}"规则"
+          body: "日常同步 v${{ env.UP_VER }} 规则"
           token: ${{ secrets.GITHUB_TOKEN }}
           makeLatest: true
