@@ -1,0 +1,81 @@
+name: Sync Upstream Rules & Release
+
+on:
+  schedule:
+    - cron: '0 4 * * 0'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'maven'
+
+      - name: Sync rules from upstream
+        run: |
+          set -e
+          git config user.name "github-actions[bot]"
+          git config user.email "actions@github.com"
+
+          git remote add up https://github.com/freeok/so-novel.git 2>/dev/null || true
+          git fetch up main --depth=1
+
+          # 用上游规则覆盖
+          git checkout up/main -- bundle/rules/
+
+          if git diff --cached --exit-code > /dev/null; then
+            echo "✅ 规则已是最新"
+            echo "SKIP=true" >> $GITHUB_ENV
+            exit 0
+          fi
+
+          # 获取上游版本号
+          UP_VER=$(git show up/main:pom.xml | grep '<version>' | head -1 | sed 's/.*<version>\(.*\)<\/version>.*/\1/')
+          OUR_VER=$(grep '<version>' pom.xml | head -1 | sed 's/.*<version>\(.*\)<\/version>.*/\1/' | sed 's/-rule.*//')
+          NEW_VER="${OUR_VER}-rule${UP_VER}"
+
+          echo "上游: v${UP_VER} → 新版本: v${NEW_VER}"
+          sed -i "s|<version>.*</version>|<version>${NEW_VER}</version>|" pom.xml
+
+          # 提交并打 tag（只推 tag，不推 main）
+          git add -A
+          git commit -m "sync: 同步上游规则 v${UP_VER}"
+          git tag "v${NEW_VER}"
+          git push origin "v${NEW_VER}"
+
+          echo "NEW_VER=${NEW_VER}" >> $GITHUB_ENV
+          echo "UP_VER=${UP_VER}" >> $GITHUB_ENV
+          echo "SKIP=false" >> $GITHUB_ENV
+
+      - name: Build Linux
+        if: env.SKIP != 'true'
+        run: |
+          mvn clean package -DskipTests -q
+          bash bin/release-linux.sh x64
+          bash bin/release-linux.sh arm64
+
+      - name: Build Windows
+        if: env.SKIP != 'true'
+        run: |
+          bash bin/release-windows.sh x64
+          bash bin/release-windows.sh arm64
+
+      - name: Create Release
+        if: env.SKIP != 'true'
+        uses: ncipollo/release-action@v1
+        with:
+          tag: "v${{ env.NEW_VER }}"
+          artifacts: "dist/*"
+          body: "日常同步"v${{ env.UP_VER }}"规则"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          makeLatest: true

@@ -17,15 +17,31 @@ table{width:100%;border-collapse:collapse}th,td{padding:8px 10px;text-align:left
 .fg select{padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:.85rem;outline:none;background:var(--cb);color:var(--text)}.fg .ck{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.85rem}
 .md-tb{display:flex;flex-wrap:wrap;gap:3px;padding:6px;background:var(--bg);border:1px solid var(--border);border-bottom:none;border-radius:8px 8px 0 0}.md-tb button{padding:3px 8px;border:1px solid var(--border);border-radius:4px;background:var(--cb);cursor:pointer;font-size:.75rem;color:var(--text)}.md-tb button:hover{border-color:var(--primary);color:var(--primary)}.md-ed{width:100%;min-height:160px;padding:10px;border:1px solid var(--border);border-radius:0 0 8px 8px;font-size:.85rem;font-family:'Courier New',monospace;resize:vertical;outline:none;background:var(--cb);color:var(--text)}.md-ed:focus{border-color:var(--primary)}.md-pv{padding:14px;border:1px solid var(--border);border-radius:8px;background:var(--cb);min-height:80px;line-height:1.7;font-size:.9rem}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 24px;border-radius:8px;font-size:.85rem;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none}.toast.show{opacity:1}
-.thm-btn{background:none;border:1px solid var(--border);border-radius:20px;cursor:pointer;font-size:1.2rem;padding:6px 12px;color:var(--text)}.config-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:768px){.config-grid{grid-template-columns:1fr}}</style></head><body>
+.thm-btn{background:none;border:1px solid var(--border);border-radius:20px;cursor:pointer;font-size:1.2rem;padding:6px 12px;color:var(--text)}.config-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:768px){.config-grid{grid-template-columns:1fr}}
+/* Toggle switch */
+.sw{position:relative;display:inline-block;width:48px;height:26px;flex-shrink:0}.sw input{opacity:0;width:0;height:0}.sl{position:absolute;cursor:pointer;inset:0;background:#ccc;transition:.3s;border-radius:26px}.sl:before{position:absolute;content:"";height:20px;width:20px;left:3px;bottom:3px;background:#fff;transition:.3s;border-radius:50%}input:checked+.sl{background:var(--ok)}input:checked+.sl:before{transform:translateX(22px)}</style></head><body>
 <div class="hd"><h1>📊 管理后台</h1><div class="ha"><button class="thm-btn" id="themeBtn" title="切换主题">🌓</button><a href="/" class="btn">返回首页</a><button class="btn btn-d" id="loBtn">退出</button></div></div>
-<div class="container"><div class="tabs"><div class="tab active" data-tab="ann">📢 公告</div><div class="tab" data-tab="user">👥 用户</div><div class="tab" data-tab="cfg">⚙ 配置</div><div class="tab" data-tab="log">📋 日志</div><div class="tab" data-tab="banlog">🚫 封号名单</div></div>
+<div class="container"><div class="tabs"><div class="tab active" data-tab="ann">📢 公告</div><div class="tab" data-tab="user">👥 用户</div><div class="tab" data-tab="cfg">⚙ 配置</div><div class="tab" data-tab="maint">🔧 维护</div><div class="tab" data-tab="log">📋 日志</div><div class="tab" data-tab="banlog">🚫 封号名单</div></div>
 
 <div class="tab-content active" id="tab-ann"><div class="card"><h2>系统公告</h2><button class="btn-p" id="addA">+ 发布公告</button><div class="loading" id="al">加载中...</div><div id="aw" style="display:none"><table><thead><tr><th>ID</th><th>标题</th><th>置顶</th><th>时间</th><th>操作</th></tr></thead><tbody id="at"></tbody></table></div></div></div>
 
 <div class="tab-content" id="tab-user"><div class="card"><h2>用户列表</h2><div class="loading" id="ul">加载中...</div><div id="uw" style="display:none"><table><thead><tr><th>ID</th><th>用户名</th><th>角色</th><th>状态</th><th>时间</th><th>操作</th></tr></thead><tbody id="ut"></tbody></table></div></div></div>
 
-<div class="tab-content" id="tab-cfg"><div class="card"><h2>系统配置</h2><div class="loading" id="cl">加载中...</div><div id="cw" style="display:none"><div class="config-grid" id="cfgGrid"></div></div></div></div>
+<div class="tab-content" id="tab-cfg"><div class="card"><h2>系统配置</h2><div class="loading" id="cl">加载中...</div><div id="cw" style="display:none"><div class="config-grid" id="cfgGrid"></div></div></div>
+<div class="card" style="margin-top:16px"><h2>🔄 更新检查</h2><div id="upInfo" style="font-size:.85rem;color:var(--ts)">加载中...</div><button class="btn-p" id="upBtn" style="margin-top:8px">手动检查更新</button> <button class="btn-p" id="upApply" style="margin-top:8px;background:var(--danger);display:none">确认更新</button></div></div>
+
+<div class="tab-content" id="tab-maint"><div class="card"><h2>维护模式</h2>
+<div style="display:flex;align-items:center;gap:16px;margin-bottom:20px">
+  <label class="sw" id="maintToggleWrap"><input type="checkbox" id="maintToggle"><span class="sl"></span></label>
+  <span id="maintStatus" style="font-size:.9rem;color:var(--ts)">加载中...</span>
+</div>
+<div style="border-top:1px solid var(--border);padding-top:16px">
+  <label style="font-size:.9rem;font-weight:500;display:block;margin-bottom:8px;color:var(--text)">维护理由（Markdown）</label>
+  <div class="md-tb" id="maintMtb"><button data-md="**${s}**">B</button><button data-md="*${s}*"><i>I</i></button><button data-md="# ${s}">H1</button><button data-md="## ${s}">H2</button><button data-md="### ${s}">H3</button><button data-md="[${s}](url)">🔗</button><button data-md="`${s}`">`</button><button data-md="\n\`\`\`\n${s}\n\`\`\`\n">```</button><button data-md="- ${s}">•</button><button data-md="> ${s}">❝</button><button id="maintPvBtn">👁预览</button></div>
+  <textarea class="md-ed" id="maintReason" placeholder="填写维护原因，用户可在维护页面点击查看..."></textarea>
+  <div class="md-pv" id="maintPv" style="display:none"></div>
+  <button class="btn-p" id="saveMaintBtn" style="margin-top:10px;width:100%">💾 保存维护设置</button>
+</div></div></div>
 
 <div class="tab-content" id="tab-log"><div class="card"><h2>下载日志</h2><div class="loading" id="ll">加载中...</div><div id="lw" style="display:none"><table><thead><tr><th>书名</th><th>作者</th><th>格式</th><th>时间</th></tr></thead><tbody id="lt"></tbody></table></div></div></div>
 
@@ -86,6 +102,48 @@ var labels={contact_info:'管理员联系方式\n(封禁/删除时显示给用�
 for(var k in labels){var val=cfg[k]||'';html+='<div class="fg"><label>'+labels[k].replace(/\n/g,'<br>')+'</label><div style="display:flex;gap:6px"><input type="text" value="'+val+'" data-key="'+k+'" style="flex:1"><button class="btn-p" onclick="saveCfg(\''+k+'\',this.previousElementSibling.value)" style="width:60px;margin:0;font-size:.75rem">保存</button></div></div>'}$('cfgGrid').innerHTML=html;$('cl').style.display='none';$('cw').style.display='block'}catch(e){$('cl').textContent='失败'}}
 window.saveCfg=async function(k,v){try{var r=await fetch('/api/admin/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'config',key:k,value:v})});if(r.ok)t('已保存')}catch(e){alert('失败')}};
 
+// Update check
+var upHasUpdate=false;
+async function checkUpd(){
+  try{var r=await fetch('/api/admin/update');var d=gd(await r.json());var el=$('upInfo');
+  if(d.error){el.innerHTML='<span style="color:var(--danger)">检查失败: '+d.error+'</span>';return}
+  el.innerHTML='当前: <b>'+d.currentVersion+'</b> | 最新: <b>'+d.latestVersion+'</b>'+(d.hasUpdate?'<br><span style="color:var(--danger)">🔄 有新版本！</span> <a href="'+d.url+'" target="_blank" style="color:var(--primary)">查看</a>':'  ✅ 已是最新');
+  upHasUpdate=d.hasUpdate;$('upApply').style.display=d.hasUpdate?'inline-block':'none'}catch(e){$('upInfo').textContent='检查失败'}}
+$('upBtn').addEventListener('click',function(){$('upInfo').textContent='检查中...';checkUpd()});
+$('upApply').addEventListener('click',function(){if(!confirm('确认执行更新？服务会重启！'))return;$('upInfo').textContent='更新中...';fetch('/api/admin/update?action=apply',{method:'POST'}).then(function(r){return r.json()}).then(function(d){var dd=gd(d);$('upInfo').textContent=dd.message||'更新完成'}).catch(function(){$('upInfo').textContent='更新失败'})});
+
+// Maintenance mode
+var maintEnabled=false;
+async function loadMaint(){
+  try{
+    var r=await fetch('/api/admin/maintenance');var d=gd(await r.json());
+    maintEnabled=d.enabled;
+    $('maintToggle').checked=d.enabled;
+    $('maintReason').value=d.reason||'';
+    $('maintStatus').textContent='维护模式: '+(d.enabled?'🟢 已开启':'🔴 已关闭');
+  }catch(e){$('maintStatus').textContent='加载失败'}
+}
+$('maintToggle').addEventListener('change',function(){
+  var on=this.checked?'on':'off';
+  var reason=$('maintReason').value;
+  fetch('/api/admin/maintenance',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:on,reason:reason})}).then(function(r){return r.json()}).then(function(d){
+    var dd=gd(d);
+    maintEnabled=dd.enabled;
+    $('maintStatus').textContent='维护模式: '+(dd.enabled?'🟢 已开启':'🔴 已关闭');
+    t(dd.enabled?'维护模式已开启':'维护模式已关闭')
+  }).catch(function(){t('操作失败','e');$('maintToggle').checked=maintEnabled})
+});
+$('saveMaintBtn').addEventListener('click',function(){
+  var reason=$('maintReason').value;
+  var action=maintEnabled?'on':'off';
+  fetch('/api/admin/maintenance',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:action,reason:reason})}).then(function(r){return r.json()}).then(function(d){
+    var dd=gd(d);t('已保存')
+  }).catch(function(){t('保存失败','e')})
+});
+// Maintenance MD toolbar
+$('maintMtb').addEventListener('click',function(e){var b=e.target.closest('button[data-md]');if(!b)return;var tpl=b.dataset.md,ta=$('maintReason'),s=ta.selectionStart,se=ta.selectionEnd,sel=ta.value.substring(s,se)||'text',ins=tpl.replace(/\$\{s\}/g,sel);ta.value=ta.value.substring(0,s)+ins+ta.value.substring(se);ta.focus();ta.setSelectionRange(s+ins.indexOf(sel)+sel.length,s+ins.indexOf(sel)+sel.length)});
+$('maintPvBtn').addEventListener('click',function(){var p=$('maintPv'),e=$('maintReason');if(p.style.display==='none'){p.innerHTML=md2html(e.value);p.style.display='block';e.style.display='none';this.textContent='✏编辑'}else{p.style.display='none';e.style.display='';this.textContent='👁预览'}});
+
 // Logs
 async function ll(){try{var r=await fetch('/api/admin/logs');var list=gd(await r.json());var t=$('lt');if(!list||!list.length){t.innerHTML='<tr><td colspan="4" style="text-align:center;color:#999">暂无</td></tr>'}else{t.innerHTML=list.map(function(l){return'<tr><td>'+l.bookName+'</td><td>'+l.author+'</td><td>'+(l.format||'').toUpperCase()+'</td><td>'+new Date(l.createdAt).toLocaleString('zh-CN')+'</td></tr>'}).join('')}$('ll').style.display='none';$('lw').style.display='block'}catch(e){$('ll').textContent='失败'}}
 
@@ -99,5 +157,5 @@ document.querySelectorAll('.tab').forEach(function(tab){tab.addEventListener('cl
 
 $('loBtn').addEventListener('click',async function(){await fetch('/api/auth/logout',{method:'POST'});window.location.href='/login.html'});
 
-chk().then(function(s){if(s){la();lu();lcfg();ll();lbl()}});
+chk().then(function(s){if(s){la();lu();lcfg();ll();lbl();checkUpd();loadMaint()}});
 </script></body></html>

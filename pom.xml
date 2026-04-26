@@ -6,11 +6,11 @@
 
     <groupId>com.pcdd</groupId>
     <artifactId>so-novel</artifactId>
-    <version>1.10.1</version>
+    <version>1.0.0</version>
     <packaging>jar</packaging>
 
-    <name>so-novel</name>
-    <url>https://github.com/freeok/so-novel</url>
+    <name>so-novel-web</name>
+    <url>https://github.com/linlelest/so-novel-web</url>
     <description>网络小说下载器</description>
     <inceptionYear>2021</inceptionYear>
     <organization>

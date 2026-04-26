@@ -2,26 +2,23 @@ package com.pcdd.sonovel.launch;
 
 import cn.hutool.core.lang.Console;
 import com.pcdd.sonovel.core.AppConfigLoader;
-import com.pcdd.sonovel.web.WebServer;
-import lombok.SneakyThrows;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.*;
 import java.net.InetAddress;
 import java.net.URI;
+import java.nio.file.*;
 
 /**
- * Windows 托盘启动器
- * <p>
- * 双击运行 → 弹窗显示地址 → 打开浏览器 → 系统托盘驻留
- *
- * @author pcdd
+ * Windows 托盘启动器 — 双击启动弹窗 + 系统托盘驻留 + 开机自启
  */
 public class WinLauncher {
 
+    private static TrayIcon trayIcon;
+
     public static void launch() {
-        // 必须在 EDT 线程启动 GUI
         SwingUtilities.invokeLater(WinLauncher::startGui);
     }
 
@@ -31,17 +28,15 @@ public class WinLauncher {
         String url = "http://" + host + ":" + port;
         String loginUrl = url + "/login.html";
 
-        // 1. 启动弹窗
         boolean openBrowser = showStartupDialog(host, port, loginUrl);
 
-        // 2. 创建系统托盘
-        TrayIcon trayIcon = createTrayIcon(url, loginUrl);
+        trayIcon = createTrayIcon(url, loginUrl);
         addTrayToSystemTray(trayIcon);
 
-        // 3. 如果用户点击"打开网页"，启动浏览器
-        if (openBrowser) {
-            openBrowser(loginUrl);
-        }
+        if (openBrowser) openBrowser(loginUrl);
+
+        // 保持 EDT 存活，等待系统托盘事件
+        try { Thread.sleep(Long.MAX_VALUE); } catch (InterruptedException ignored) {}
     }
 
     private static boolean showStartupDialog(String host, int port, String url) {
@@ -55,10 +50,8 @@ public class WinLauncher {
         JTextArea infoArea = new JTextArea(
                 "服务地址:  " + url + "\n"
                         + "本地访问:  http://127.0.0.1:" + port + "\n\n"
-                        + "首次使用请注册管理员账号。\n"
-                        + "程序将在系统托盘后台运行。");
-        infoArea.setEditable(false);
-        infoArea.setOpaque(false);
+                        + "首次使用请注册管理员账号。\n程序将在系统托盘后台运行。");
+        infoArea.setEditable(false); infoArea.setOpaque(false);
         infoArea.setFont(new Font("Microsoft YaHei", Font.PLAIN, 13));
 
         JCheckBox autoStartCheck = new JCheckBox("开机自动启动");
@@ -68,14 +61,11 @@ public class WinLauncher {
 
         JButton openBtn = new JButton("打开网页");
         openBtn.setFont(new Font("Microsoft YaHei", Font.PLAIN, 13));
-
         JButton closeBtn = new JButton("确定");
         closeBtn.setFont(new Font("Microsoft YaHei", Font.PLAIN, 13));
 
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
-        btnPanel.add(openBtn);
-        btnPanel.add(closeBtn);
-
+        btnPanel.add(openBtn); btnPanel.add(closeBtn);
         panel.add(titleLabel, BorderLayout.NORTH);
         panel.add(infoArea, BorderLayout.CENTER);
         panel.add(autoStartCheck, BorderLayout.SOUTH);
@@ -86,155 +76,140 @@ public class WinLauncher {
         dialog.add(btnPanel, BorderLayout.SOUTH);
 
         final boolean[] shouldOpen = {false};
-
-        openBtn.addActionListener(e -> {
-            shouldOpen[0] = true;
-            dialog.dispose();
-        });
+        openBtn.addActionListener(e -> { shouldOpen[0] = true; dialog.dispose(); });
         closeBtn.addActionListener(e -> dialog.dispose());
 
-        dialog.pack();
-        dialog.setLocationRelativeTo(null);
+        dialog.pack(); dialog.setLocationRelativeTo(null);
         dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         dialog.setVisible(true);
-
         return shouldOpen[0];
     }
 
     private static TrayIcon createTrayIcon(String url, String loginUrl) {
-        Image image = createTrayImage();
+        Image image = loadTrayIcon();
 
         PopupMenu popup = new PopupMenu();
-        // 使用系统菜单字体，避免中文乱码
-        Font menuFont = getSystemFont();
 
         MenuItem openItem = new MenuItem("打开网页");
-        if (menuFont != null) openItem.setFont(menuFont);
         openItem.addActionListener(e -> openBrowser(loginUrl));
         popup.add(openItem);
-
         popup.addSeparator();
 
         CheckboxMenuItem autoStartItem = new CheckboxMenuItem("开机自启");
-        if (menuFont != null) autoStartItem.setFont(menuFont);
         autoStartItem.setState(isAutoStartEnabled());
         autoStartItem.addItemListener(e -> setAutoStart(autoStartItem.getState()));
         popup.add(autoStartItem);
-
         popup.addSeparator();
 
         MenuItem exitItem = new MenuItem("退出");
-        if (menuFont != null) exitItem.setFont(menuFont);
-        exitItem.addActionListener(e -> System.exit(0));
+        exitItem.addActionListener(e -> {
+            // 移除托盘图标后强制退出 JVM
+            try { SystemTray.getSystemTray().remove(trayIcon); } catch (Exception ignored) {}
+            Runtime.getRuntime().halt(0);
+        });
         popup.add(exitItem);
 
-        TrayIcon trayIcon = new TrayIcon(image, "SoNovel Web - " + url, popup);
-        trayIcon.setImageAutoSize(true);
-        trayIcon.addActionListener(e -> openBrowser(loginUrl));
-
-        return trayIcon;
+        TrayIcon ti = new TrayIcon(image, "SoNovel Web - " + url, popup);
+        ti.setImageAutoSize(true);
+        ti.addActionListener(e -> openBrowser(loginUrl));
+        return ti;
     }
 
-    private static Font getSystemFont() {
-        // 从系统获取默认菜单字体
-        try {
-            // 使用 Swing 默认字体
-            return javax.swing.UIManager.getFont("MenuItem.font");
-        } catch (Exception e) {
-            return new Font("Microsoft YaHei", Font.PLAIN, 12);
-        }
-    }
-
-    private static Image createTrayImage() {
-        // 尝试从资源加载 logo.ico
-        try {
-            java.net.URL url = WinLauncher.class.getResource("/static/logo.ico");
-            if (url != null) {
-                Image img = java.awt.Toolkit.getDefaultToolkit().getImage(url);
-                // 确保图片已加载完成
-                MediaTracker tracker = new MediaTracker(new java.awt.Canvas());
+    private static Image loadTrayIcon() {
+        // 1. 尝试从 classpath 加载 logo.ico
+        try (InputStream is = WinLauncher.class.getResourceAsStream("/static/logo.ico")) {
+            if (is != null) {
+                byte[] data = is.readAllBytes();
+                Image img = Toolkit.getDefaultToolkit().createImage(data);
+                MediaTracker tracker = new MediaTracker(new Panel());
                 tracker.addImage(img, 0);
-                try { tracker.waitForID(0); } catch (Exception ignored) {}
+                tracker.waitForID(1000); // 等待最多1秒
                 if (img.getWidth(null) > 0) return img;
             }
         } catch (Exception ignored) {}
 
-        // 后备：绘制默认图标
+        // 2. 尝试从文件系统加载 (同级目录)
+        try {
+            Path p = Paths.get(System.getProperty("user.dir"), "logo.ico");
+            if (Files.exists(p)) {
+                byte[] data = Files.readAllBytes(p);
+                Image img = Toolkit.getDefaultToolkit().createImage(data);
+                MediaTracker tracker = new MediaTracker(new Panel());
+                tracker.addImage(img, 0);
+                tracker.waitForID(500);
+                if (img.getWidth(null) > 0) return img;
+            }
+        } catch (Exception ignored) {}
+
+        // 3. 绘制后备图标 (紫色圆+S)
         BufferedImage bi = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = bi.createGraphics();
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g.setColor(new Color(93, 93, 129));
-        g.fillOval(0, 0, 16, 16);
-        g.setColor(Color.WHITE);
-        g.setFont(new Font("Arial", Font.BOLD, 10));
-        g.drawString("S", 3, 12);
-        g.dispose();
+        g.setColor(new Color(93, 93, 129)); g.fillOval(0, 0, 16, 16);
+        g.setColor(Color.WHITE); g.setFont(new Font("Arial", Font.BOLD, 10));
+        g.drawString("S", 3, 12); g.dispose();
         return bi;
     }
 
-    private static void addTrayToSystemTray(TrayIcon trayIcon) {
+    private static void addTrayToSystemTray(TrayIcon ti) {
         try {
-            SystemTray.getSystemTray().add(trayIcon);
+            if (!SystemTray.isSupported()) { Console.error("系统托盘不支持"); return; }
+            SystemTray.getSystemTray().add(ti);
         } catch (Exception e) {
-            Console.error("无法添加系统托盘图标: {}", e.getMessage());
+            Console.error("添加托盘失败: {}", e.getMessage());
         }
     }
 
     private static String getLocalHost() {
-        try {
-            return InetAddress.getLocalHost().getHostAddress();
-        } catch (Exception e) {
-            return "127.0.0.1";
-        }
+        try { return InetAddress.getLocalHost().getHostAddress(); }
+        catch (Exception e) { return "127.0.0.1"; }
     }
 
-    @SneakyThrows
     private static void openBrowser(String url) {
-        if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
-            Desktop.getDesktop().browse(new URI(url));
-        } else {
-            Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler " + url);
-        }
+        try {
+            if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+                Desktop.getDesktop().browse(new URI(url));
+            } else {
+                Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler " + url);
+            }
+        } catch (Exception ignored) {}
     }
 
+    // === 开机自启 ===
     private static boolean isAutoStartEnabled() {
         try {
-            Process p = Runtime.getRuntime().exec(
-                    "reg query HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run /v SoNovelWeb");
-            p.waitFor();
-            return p.exitValue() == 0;
-        } catch (Exception e) {
-            return false;
-        }
+            Process p = Runtime.getRuntime().exec("reg query HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run /v SoNovelWeb");
+            p.waitFor(); return p.exitValue() == 0;
+        } catch (Exception e) { return false; }
     }
 
-    @SneakyThrows
     private static void setAutoStart(boolean enable) {
-        String appPath = System.getProperty("java.class.path");
-        // 找到 app.jar
-        if (appPath == null) return;
+        try {
+            String workDir = System.getProperty("user.dir");
+            // launch4j 构建后 runtime 在 exe 同级目录
+            Path javaExe = Paths.get(workDir, "runtime", "bin", "javaw.exe");
+            Path jar = Paths.get(workDir, "app.jar");
 
-        String jarPath = null;
-        for (String part : appPath.split(System.getProperty("path.separator"))) {
-            if (part.endsWith("app.jar") || part.endsWith("app-jar-with-dependencies.jar")) {
-                jarPath = part;
-                break;
+            if (!Files.exists(javaExe)) {
+                // fallback to system java
+                javaExe = Paths.get(System.getProperty("java.home"), "bin", "javaw.exe");
+                if (!Files.exists(javaExe)) return;
             }
-        }
-        if (jarPath == null) return;
+            if (!Files.exists(jar)) return;
 
-        String javaHome = System.getProperty("java.home");
-        String javaw = javaHome + "\\bin\\javaw.exe";
-        String cmd = javaw + " -jar \"" + jarPath + "\"";
+            String cmd = "\"" + javaExe + "\" -jar \"" + jar + "\"";
 
-        if (enable) {
-            Runtime.getRuntime().exec(
-                    "reg add HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run /v SoNovelWeb /t REG_SZ /d \""
-                            + cmd.replace("\"", "\\\"") + "\" /f");
-        } else {
-            Runtime.getRuntime().exec(
-                    "reg delete HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run /v SoNovelWeb /f");
+            if (enable) {
+                new ProcessBuilder("reg", "add",
+                        "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+                        "/v", "SoNovelWeb", "/t", "REG_SZ", "/d", cmd, "/f").start().waitFor();
+            } else {
+                new ProcessBuilder("reg", "delete",
+                        "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+                        "/v", "SoNovelWeb", "/f").start().waitFor();
+            }
+        } catch (Exception e) {
+            Console.error("开机自启设置失败: {}", e.getMessage());
         }
     }
-
 }

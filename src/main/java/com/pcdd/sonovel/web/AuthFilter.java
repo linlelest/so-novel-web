@@ -67,6 +67,50 @@ public class AuthFilter implements Filter {
 
         if (isPublicPath(path)) { chain.doFilter(request, response); return; }
 
+        // Maintenance mode
+        String mm = configRepo.get("maintenance_mode");
+        if ("true".equals(mm)) {
+            // Admin via session bypass
+            String sid = extractSid(req);
+            if (sid != null) {
+                SessionData sd = getSession(sid);
+                if (sd != null && "admin".equals(sd.role())) {
+                    req.setAttribute("userId", sd.userId());
+                    req.setAttribute("username", sd.username());
+                    req.setAttribute("role", sd.role());
+                    chain.doFilter(request, response);
+                    return;
+                }
+            }
+            // Admin via token bypass
+            String token = req.getParameter("token");
+            if (token != null) {
+                Integer uid = tokenRepo.findUserIdByToken(token);
+                if (uid != null) {
+                    AuthUser u = userRepo.findById(uid);
+                    if (u != null && !u.isBanned() && "admin".equals(u.getRole())) {
+                        req.setAttribute("userId", u.getId());
+                        req.setAttribute("username", u.getUsername());
+                        req.setAttribute("role", u.getRole());
+                        req.setAttribute("authMethod", "token");
+                        chain.doFilter(request, response);
+                        return;
+                    }
+                }
+            }
+            // Block non-admin
+            String accept = req.getHeader("Accept");
+            boolean browser = accept != null && (accept.contains("text/html") || accept.contains("application/xhtml"));
+            if (browser || path.equals("/") || path.equals("/index.html") || !path.startsWith("/api/")) {
+                resp.sendRedirect("/maintenance.html");
+            } else {
+                resp.setStatus(503);
+                resp.setContentType("application/json;charset=UTF-8");
+                resp.getWriter().println(JSONUtil.toJsonStr(JsonResponse.error(503, "网站正在更新升级中")));
+            }
+            return;
+        }
+
         // Session
         String sid = extractSid(req);
         if (sid != null) {
@@ -115,7 +159,7 @@ public class AuthFilter implements Filter {
         if (PUBLIC_PATHS.contains(p)) return true;
         if (p.startsWith("/api/auth/")) return true; if (p.startsWith("/api/public/")) return true;
         if (p.endsWith(".css")||p.endsWith(".js")||p.endsWith(".ico")||p.endsWith(".png")||p.endsWith(".svg")) return true;
-        if (p.equals("/login.html")||p.equals("/register.html")) return true;
+        if (p.equals("/login.html")||p.equals("/register.html")||p.equals("/maintenance.html")) return true;
         return false;
     }
     private String getClientIp(HttpServletRequest r) {

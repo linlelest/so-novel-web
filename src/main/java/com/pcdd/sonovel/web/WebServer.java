@@ -30,6 +30,8 @@ public class WebServer {
             Console.log("SoNovel {}", "v" + AppConfigLoader.APP_CONFIG.getVersion());
             Console.log(render("✔ Web server started (Jetty {})", "green"), Jetty.VERSION);
             Console.log(render("➜ Local: http://localhost:{}/", "blue"), port);
+            // 启动自动更新定时器（每周日 UTC 07:00 检测并安装）
+            AutoUpdater.start();
             server.join();
         } catch (Exception e) {
             Console.error(e, render("✖ Startup failed.", "red"));
@@ -61,6 +63,13 @@ public class WebServer {
         // 公告
         context.addServlet(AnnouncementServlet.class, "/api/announcements/*");
         context.addServlet(AnnouncementServlet.class, "/api/admin/announcements");
+
+        // 更新检查
+        context.addServlet(UpdateServlet.class, "/api/admin/update");
+
+        // 维护模式
+        context.addServlet(MaintenanceServlet.class, "/api/admin/maintenance");
+        context.addServlet(MaintenanceServlet.class, "/api/public/maintenance");
 
         // 默认 Servlet 提供静态文件
         ServletHolder staticHolder = new ServletHolder("default", DefaultServlet.class);

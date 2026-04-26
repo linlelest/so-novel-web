@@ -1,0 +1,71 @@
+<!DOCTYPE html><html lang="zh"><head><meta charset="UTF-8"><meta content="width=device-width,initial-scale=1.0" name="viewport">
+<title>网站维护中 - SoNovel</title>
+<style>:root{--primary:#5d5d81;--ph:#7b7b9d;--bg:#f8f9fa;--cb:#fff;--text:#333;--ts:#666;--border:#e5e5e5;--shadow:0 8px 32px rgba(0,0,0,.1)}[data-theme="dark"]{--bg:#1a1a2e;--cb:#16213e;--text:#e0e0e0;--ts:#a0a0a0;--border:#2a2a4a;--primary:#8b8bb0;--ph:#a0a0c0;--shadow:0 8px 32px rgba(0,0,0,.5)}*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;transition:background .3s;color:var(--text)}
+.ac{background:var(--cb);border-radius:16px;box-shadow:var(--shadow);padding:48px 40px;width:100%;max-width:520px;transition:background .3s;text-align:center}
+.icon{font-size:4rem;margin-bottom:16px;display:block}.ac h1{font-size:1.6rem;color:var(--primary);margin-bottom:12px}.ac p{color:var(--ts);font-size:.95rem;line-height:1.7;margin-bottom:24px}
+.pulse{display:inline-block;width:10px;height:10px;background:#e6a23c;border-radius:50%;animation:pl 1.5s ease-in-out infinite;margin-right:8px;vertical-align:middle}
+@keyframes pl{0%,100%{opacity:.3}50%{opacity:1}}
+.btn{display:inline-block;padding:10px 24px;border:1px solid var(--border);border-radius:10px;background:var(--cb);cursor:pointer;font-size:.9rem;color:var(--text);transition:all .2s;text-decoration:none}.btn:hover{border-color:var(--primary);color:var(--primary)}
+.btn-p{display:inline-block;padding:10px 24px;border:none;border-radius:10px;background:var(--primary);color:#fff;cursor:pointer;font-size:.9rem;transition:all .2s;text-decoration:none}.btn-p:hover{background:var(--ph)}
+.reason-modal{display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.5);align-items:center;justify-content:center}.reason-modal.show{display:flex}
+.reason-box{background:var(--cb);border-radius:16px;padding:28px;width:90%;max-width:600px;max-height:70vh;overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,.3);text-align:left}
+.reason-box h3{margin:0 0 14px;color:var(--primary)}.reason-box .rclose{float:right;background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--ts)}.reason-box .rclose:hover{color:var(--text)}
+.reason-content{line-height:1.8;font-size:.95rem}.reason-content h1,.reason-content h2,.reason-content h3{margin:12px 0 8px;color:var(--primary)}.reason-content p{margin:6px 0}.reason-content code{padding:2px 6px;background:var(--bg);border-radius:4px;font-size:.85rem}.reason-content pre{background:var(--bg);padding:12px;border-radius:8px;overflow-x:auto;margin:8px 0}.reason-content blockquote{border-left:3px solid var(--primary);padding-left:12px;margin:8px 0;color:var(--ts)}.reason-content a{color:var(--primary)}.reason-content strong{font-weight:700}
+.thm-btn{position:fixed;top:12px;right:12px;background:none;border:1px solid var(--border);border-radius:20px;cursor:pointer;font-size:1.2rem;padding:6px 12px;color:var(--text);z-index:100}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 24px;border-radius:8px;font-size:.85rem;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none}.toast.show{opacity:1}
+</style></head><body>
+<button class="thm-btn" id="themeBtn" title="切换主题">🌓</button>
+<div class="ac">
+  <span class="icon">🔧</span>
+  <h1>网站正在更新升级中</h1>
+  <p>我们正在对系统进行维护升级，预计很快完成。<br>请稍后再试，感谢您的理解与支持！</p>
+  <div style="margin-bottom:20px"><span class="pulse"></span><span style="color:var(--ts);font-size:.85rem">维护中，请耐心等待...</span></div>
+  <div><button class="btn" id="reasonBtn" style="display:none">📄 查看维护原因</button></div>
+</div>
+
+<!-- 维护原因弹窗 -->
+<div class="reason-modal" id="reasonModal">
+  <div class="reason-box">
+    <button class="rclose" id="reasonClose">&times;</button>
+    <h3>维护原因</h3>
+    <div class="reason-content" id="reasonContent">加载中...</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+function $(id){return document.getElementById(id)}function gd(d){return(d&&d.data!==undefined)?d.data:d}
+
+// Theme
+var th=localStorage.getItem('sonovel-theme')||'light';document.documentElement.setAttribute('data-theme',th);
+$('themeBtn').addEventListener('click',function(){th=th==='light'?'dark':'light';document.documentElement.setAttribute('data-theme',th);localStorage.setItem('sonovel-theme',th);this.textContent=th==='light'?'🌙':'☀️'});if(th==='dark')$('themeBtn').textContent='☀️';
+
+// MD to HTML (simple)
+function md2html(tx){if(!tx)return'';var h=tx.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');h=h.replace(/```([\s\S]*?)```/g,'<pre><code>$1</code></pre>');h=h.replace(/^### (.+)$/gm,'<h3>$1</h3>');h=h.replace(/^## (.+)$/gm,'<h2>$1</h2>');h=h.replace(/^# (.+)$/gm,'<h1>$1</h1>');h=h.replace(/^> (.+)$/gm,'<blockquote>$1</blockquote>');h=h.replace(/`([^`]+)`/g,'<code>$1</code>');h=h.replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank">$1</a>');h=h.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');h=h.replace(/\*([^*]+)\*/g,'<em>$1</em>');return h}
+
+// Check maintenance status
+var hasReason=false;
+async function checkMaint(){
+  try{
+    var r=await fetch('/api/public/maintenance');var d=gd(await r.json());
+    if(!d.enabled){window.location.href='/';return}
+    if(d.reason&&d.reason.trim()){hasReason=true;$('reasonBtn').style.display='inline-block'}
+    else{hasReason=false;$('reasonBtn').style.display='none'}
+  }catch(e){}
+}
+// Poll every 15 seconds
+checkMaint();setInterval(checkMaint,15000);
+
+// Show reason
+$('reasonBtn').addEventListener('click',async function(){
+  try{
+    var r=await fetch('/api/public/maintenance');var d=gd(await r.json());
+    $('reasonContent').innerHTML=d.reason?md2html(d.reason):'<span style="color:var(--ts)">暂无维护原因说明</span>';
+    $('reasonModal').classList.add('show')
+  }catch(e){$('reasonContent').textContent='加载失败'}
+});
+$('reasonClose').addEventListener('click',function(){$('reasonModal').classList.remove('show')});
+$('reasonModal').addEventListener('click',function(e){if(e.target===this)this.classList.remove('show')});
+</script></body></html>

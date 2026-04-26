@@ -139,6 +139,12 @@ public class DatabaseManager {
                     INSERT OR IGNORE INTO sys_config VALUES ('contact_info', '请联系管理员')
                     """);
             stmt.execute("""
+                    INSERT OR IGNORE INTO sys_config VALUES ('maintenance_mode', 'false')
+                    """);
+            stmt.execute("""
+                    INSERT OR IGNORE INTO sys_config VALUES ('maintenance_reason', '')
+                    """);
+            stmt.execute("""
                     INSERT OR IGNORE INTO sys_config VALUES ('api_search_rate', '10/60')
                     """);
             stmt.execute("""

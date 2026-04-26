@@ -2,9 +2,11 @@ name: Releases
 
 on:
   workflow_dispatch:
-  push:
-    tags:
-      - 'v*'
+    inputs:
+      version:
+        description: '版本号 (如 1.0.1，不含 v 前缀)'
+        required: true
+        type: string
 
 jobs:
   release-windows-x64:
@@ -66,5 +68,7 @@ jobs:
           path: dist
       - uses: ncipollo/release-action@v1
         with:
+          tag: "v${{ github.event.inputs.version }}"
           artifacts: "dist/*"
-          token: ${{ secrets.GITHUB_TOKEN }} 
+          token: ${{ secrets.GITHUB_TOKEN }}
+          makeLatest: true
