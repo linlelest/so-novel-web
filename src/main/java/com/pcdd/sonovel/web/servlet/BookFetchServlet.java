@@ -65,7 +65,7 @@ public class BookFetchServlet extends HttpServlet {
             Rule rule = SourceUtils.getRule(bookUrl);
             try {
                 BookParser bp = new BookParser(AppConfigLoader.APP_CONFIG);
-                var bookInfo = bp.parse(bookUrl, rule);
+                var bookInfo = bp.parse(bookUrl);
                 if (bookInfo != null) {
                     bookName = bookInfo.getBookName();
                     author = bookInfo.getAuthor();
