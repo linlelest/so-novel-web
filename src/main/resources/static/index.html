@@ -50,7 +50,7 @@ table{width:100%;border-collapse:collapse}th,td{padding:6px 8px;text-align:left;
 <div><label style="font-size:.85rem;display:block;margin-bottom:2px">并发</label><input type="number" id="sc" min="1" placeholder="默认" style="width:70px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:.85rem;background:var(--cb);color:var(--text)"></div></div></div>
 
 <!-- Banned log (public, top of page) -->
-<div class="sec" id="banSec" style="display:none"><h2>🚫 违规封号名单</h2><div id="banList"></div></div>
+<div class="sec" id="banSec"><h2>🚫 违规封号名单</h2><div id="banList" style="font-size:.85rem;color:var(--ts)">加载中...</div></div>
 
 <!-- Announcements -->
 <div class="sec" id="annSec" style="display:none"><h2>📢 系统公告</h2><div id="annList"></div></div>
@@ -150,7 +150,7 @@ if(bd.style.display==='none'||!bd.style.display){if(bd.textContent==='加载中.
 function m2h(tx){if(!tx)return'';var h=tx.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');h=h.replace(/```([\s\S]*?)```/g,'<pre><code>$1</code></pre>');h=h.replace(/^### (.+)$/gm,'<h3>$1</h3>');h=h.replace(/^## (.+)$/gm,'<h2>$1</h2>');h=h.replace(/^# (.+)$/gm,'<h1>$1</h1>');h=h.replace(/^> (.+)$/gm,'<blockquote>$1</blockquote>');h=h.replace(/`([^`]+)`/g,'<code>$1</code>');h=h.replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank">$1</a>');h=h.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');h=h.replace(/\*([^*]+)\*/g,'<em>$1</em>');return h}
 
 // Banned log — always visible on homepage, collapsed by default
-async function lbl(){try{var r=await fetch('/api/public/bannedlog');var list=gd(await r.json())||[];$('banSec').style.display='';
+async function lbl(){try{var r=await fetch('/api/public/bannedlog');var list=gd(await r.json())||[];
 if(!list.length){$('banList').innerHTML='<p style="font-size:.8rem;color:var(--ts);padding:4px 0">暂无封号记录</p>';return}
 var top=list[0];var html='<div class="ban-top">⚠ <b>最新封号：</b>'+top.username+'，原因：'+top.reason+' ('+new Date(top.createdAt).toLocaleString('zh-CN')+')</div>';
 if(list.length>1){html+='<details style="margin-top:4px"><summary style="cursor:pointer;color:var(--ts);font-size:.8rem;padding:4px 0">查看全部 ('+list.length+'条记录)</summary><div style="padding:4px 0">'+list.slice(1).map(function(l){return'<p style="margin:2px 0;font-size:.8rem;color:var(--ts)">'+l.username+'，原因：'+l.reason+' ('+new Date(l.createdAt).toLocaleString('zh-CN')+')</p>'}).join('')+'</div></details>'}

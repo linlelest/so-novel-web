@@ -16,11 +16,13 @@ public class Announcement {
     private String title;
     private String content;   // Markdown 格式
     private Integer pinned;   // 1=置顶, 0=普通
+    private Integer showOnLogin; // 1=在登录/注册页显示
+    private Integer dismissable; // 1=可点击"不再显示"
     private Long createdAt;
     private Long updatedAt;
 
-    public boolean isPinned() {
-        return pinned != null && pinned == 1;
-    }
+    public boolean isPinned() { return pinned != null && pinned == 1; }
+    public boolean isShowOnLogin() { return showOnLogin != null && showOnLogin == 1; }
+    public boolean isDismissable() { return dismissable != null && dismissable == 1; }
 
 }

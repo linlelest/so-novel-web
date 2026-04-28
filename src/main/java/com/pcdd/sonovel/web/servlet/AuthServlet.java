@@ -14,6 +14,7 @@ public class AuthServlet extends HttpServlet {
     private final UserRepository userRepo = new UserRepository();
     private final TokenRepository tokenRepo = new TokenRepository();
     private final ConfigRepository configRepo = new ConfigRepository();
+    private final InviteCodeRepository inviteCodeRepo = new InviteCodeRepository();
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) {
@@ -56,6 +57,13 @@ public class AuthServlet extends HttpServlet {
         String ip = getIp(req);
         if(AuthFilter.isIpBanned(ip)) { RespUtils.writeError(resp,403,"IP已被封禁。"+configRepo.get("contact_info")); return; }
         if(userRepo.findByUsername(u)!=null) { RespUtils.writeError(resp,409,"用户名已存在"); return; }
+        // Check invite code if enabled
+        if ("true".equals(configRepo.get("invite_code_enabled"))) {
+            String code = b.getStr("inviteCode","").strip();
+            if (code.isEmpty()) { RespUtils.writeError(resp,400,configRepo.get("invite_code_prompt")); return; }
+            if (inviteCodeRepo.findByCode(code) == null) { RespUtils.writeError(resp,400,"邀请码无效"); return; }
+            if (!inviteCodeRepo.useCode(code)) { RespUtils.writeError(resp,400,"邀请码已用完"); return; }
+        }
         userRepo.create(u,pw,"user");
         RespUtils.writeJson(resp, JSONUtil.createObj().set("message","注册成功，请返回登录"));
     }

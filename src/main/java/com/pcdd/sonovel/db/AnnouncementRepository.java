@@ -18,17 +18,19 @@ public class AnnouncementRepository {
     /**
      * 创建公告
      */
-    public Announcement create(String title, String content, int pinned) {
+    public Announcement create(String title, String content, int pinned, int showOnLogin, int dismissable) {
         long now = System.currentTimeMillis();
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(
-                     "INSERT INTO announcements (title, content, pinned, created_at, updated_at) VALUES (?,?,?,?,?)",
+                     "INSERT INTO announcements (title, content, pinned, show_on_login, dismissable, created_at, updated_at) VALUES (?,?,?,?,?,?,?)",
                      Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, title);
             ps.setString(2, content);
             ps.setInt(3, pinned);
-            ps.setLong(4, now);
-            ps.setLong(5, now);
+            ps.setInt(4, showOnLogin);
+            ps.setInt(5, dismissable);
+            ps.setLong(6, now);
+            ps.setLong(7, now);
             ps.executeUpdate();
             ResultSet rs = ps.getGeneratedKeys();
             if (rs.next()) {
@@ -37,6 +39,8 @@ public class AnnouncementRepository {
                         .title(title)
                         .content(content)
                         .pinned(pinned)
+                        .showOnLogin(showOnLogin)
+                        .dismissable(dismissable)
                         .createdAt(now)
                         .updatedAt(now)
                         .build();
@@ -85,15 +89,17 @@ public class AnnouncementRepository {
     /**
      * 更新公告
      */
-    public void update(int id, String title, String content, int pinned) {
+    public void update(int id, String title, String content, int pinned, int showOnLogin, int dismissable) {
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(
-                     "UPDATE announcements SET title = ?, content = ?, pinned = ?, updated_at = ? WHERE id = ?")) {
+                     "UPDATE announcements SET title=?, content=?, pinned=?, show_on_login=?, dismissable=?, updated_at=? WHERE id=?")) {
             ps.setString(1, title);
             ps.setString(2, content);
             ps.setInt(3, pinned);
-            ps.setLong(4, System.currentTimeMillis());
-            ps.setInt(5, id);
+            ps.setInt(4, showOnLogin);
+            ps.setInt(5, dismissable);
+            ps.setLong(6, System.currentTimeMillis());
+            ps.setInt(7, id);
             ps.executeUpdate();
         } catch (Exception e) {
             throw new RuntimeException("更新公告失败", e);
@@ -121,12 +127,14 @@ public class AnnouncementRepository {
         try (Connection conn = db.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(
-                     "SELECT id, title, pinned, created_at, updated_at FROM announcements ORDER BY pinned DESC, created_at DESC")) {
+                     "SELECT id, title, pinned, show_on_login, dismissable, created_at, updated_at FROM announcements ORDER BY pinned DESC, created_at DESC")) {
             while (rs.next()) {
                 list.add(Announcement.builder()
                         .id(rs.getInt("id"))
                         .title(rs.getString("title"))
                         .pinned(rs.getInt("pinned"))
+                        .showOnLogin(rs.getInt("show_on_login"))
+                        .dismissable(rs.getInt("dismissable"))
                         .createdAt(rs.getLong("created_at"))
                         .updatedAt(rs.getLong("updated_at"))
                         .build());
@@ -137,12 +145,26 @@ public class AnnouncementRepository {
         return list;
     }
 
+    /** 获取需在登录/注册页显示的公告列表 */
+    public List<Announcement> findLoginPage() {
+        List<Announcement> list = new ArrayList<>();
+        try (Connection conn = db.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(
+                     "SELECT * FROM announcements WHERE show_on_login=1 ORDER BY pinned DESC, created_at DESC")) {
+            while (rs.next()) list.add(mapAnnouncement(rs));
+        } catch (Exception e) { throw new RuntimeException(e); }
+        return list;
+    }
+
     private Announcement mapAnnouncement(ResultSet rs) throws SQLException {
         return Announcement.builder()
                 .id(rs.getInt("id"))
                 .title(rs.getString("title"))
                 .content(rs.getString("content"))
                 .pinned(rs.getInt("pinned"))
+                .showOnLogin(rs.getInt("show_on_login"))
+                .dismissable(rs.getInt("dismissable"))
                 .createdAt(rs.getLong("created_at"))
                 .updatedAt(rs.getLong("updated_at"))
                 .build();

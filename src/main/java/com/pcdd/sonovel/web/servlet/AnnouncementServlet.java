@@ -33,6 +33,12 @@ public class AnnouncementServlet extends HttpServlet {
                 RespUtils.writeJson(resp, list);
                 return;
             }
+            // 公开接口：获取登录页公告列表
+            if (path.endsWith("/api/announcements/login-page")) {
+                List<Announcement> list = repo.findLoginPage();
+                RespUtils.writeJson(resp, list);
+                return;
+            }
             // 公开接口：获取单条公告详情（含 content）
             if (path.endsWith("/api/announcements/detail")) {
                 String idStr = req.getParameter("id");
@@ -65,8 +71,10 @@ public class AnnouncementServlet extends HttpServlet {
             String title = body.getStr("title", "").strip();
             String content = body.getStr("content", "");
             int pinned = body.getInt("pinned", 0);
+            int showOnLogin = body.getInt("showOnLogin", 0);
+            int dismissable = body.getInt("dismissable", 0);
             if (title.isEmpty()) { RespUtils.writeError(resp, 400, "标题不能为空"); return; }
-            Announcement a = repo.create(title, content, pinned);
+            Announcement a = repo.create(title, content, pinned, showOnLogin, dismissable);
             RespUtils.writeJson(resp, JSONUtil.createObj().set("message", "创建成功").set("id", a.getId()));
         } catch (Exception e) { RespUtils.writeError(resp, 500, e.getMessage()); }
     }
@@ -81,9 +89,11 @@ public class AnnouncementServlet extends HttpServlet {
             String title = body.getStr("title", "").strip();
             String content = body.getStr("content", "");
             int pinned = body.getInt("pinned", 0);
+            int showOnLogin = body.getInt("showOnLogin", 0);
+            int dismissable = body.getInt("dismissable", 0);
             if (id <= 0) { RespUtils.writeError(resp, 400, "ID 不能为空"); return; }
             if (title.isEmpty()) { RespUtils.writeError(resp, 400, "标题不能为空"); return; }
-            repo.update(id, title, content, pinned);
+            repo.update(id, title, content, pinned, showOnLogin, dismissable);
             RespUtils.writeJson(resp, JSONUtil.createObj().set("message", "更新成功"));
         } catch (Exception e) { RespUtils.writeError(resp, 500, e.getMessage()); }
     }

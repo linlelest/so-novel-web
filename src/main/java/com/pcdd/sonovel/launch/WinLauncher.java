@@ -120,52 +120,56 @@ public class WinLauncher {
     }
 
     private static void showTrayMenu(MouseEvent e, String loginUrl) {
-        final JDialog dialog = new JDialog();
-        dialog.setUndecorated(true);
-        dialog.setAlwaysOnTop(true);
-
         JPopupMenu popup = new JPopupMenu();
         Font menuFont = new Font("Microsoft YaHei", Font.PLAIN, 13);
 
         JMenuItem openItem = new JMenuItem("打开网页");
         openItem.setFont(menuFont);
-        openItem.addActionListener(ev -> { openBrowser(loginUrl); dialog.dispose(); });
+        openItem.addActionListener(ev -> openBrowser(loginUrl));
         popup.add(openItem);
         popup.addSeparator();
 
         JCheckBoxMenuItem autoStartItem = new JCheckBoxMenuItem("开机自启");
         autoStartItem.setFont(menuFont);
         autoStartItem.setState(isAutoStartEnabled());
-        autoStartItem.addActionListener(ev -> { setAutoStart(autoStartItem.getState()); dialog.dispose(); });
+        autoStartItem.addActionListener(ev -> setAutoStart(autoStartItem.getState()));
         popup.add(autoStartItem);
         popup.addSeparator();
 
         JMenuItem exitItem = new JMenuItem("退出");
         exitItem.setFont(menuFont);
         exitItem.addActionListener(ev -> {
-            dialog.dispose();
             try { SystemTray.getSystemTray().remove(trayIcon); } catch (Exception ignored) {}
             WebServer.shutdown();
             Runtime.getRuntime().halt(0);
         });
         popup.add(exitItem);
 
-        // Dismiss when focus lost (clicked outside)
-        dialog.addWindowFocusListener(new WindowAdapter() {
-            public void windowLostFocus(WindowEvent we) { dialog.dispose(); }
+        // Position at mouse pointer
+        popup.setLocation(e.getXOnScreen(), e.getYOnScreen());
+
+        // Global AWT listener: click outside → dismiss
+        AWTEventListener dl = ev -> {
+            if (ev instanceof MouseEvent me && me.getID() == MouseEvent.MOUSE_PRESSED) {
+                if (!popup.isShowing()) { Toolkit.getDefaultToolkit().removeAWTEventListener(dl); return; }
+                Component src = me.getComponent();
+                if (src == null || !SwingUtilities.isDescendingFrom(src, popup)) {
+                    popup.setVisible(false);
+                    Toolkit.getDefaultToolkit().removeAWTEventListener(dl);
+                }
+            }
+        };
+        Toolkit.getDefaultToolkit().addAWTEventListener(dl, AWTEvent.MOUSE_EVENT_MASK);
+        popup.addPopupMenuListener(new PopupMenuListener() {
+            public void popupMenuWillBecomeInvisible(PopupMenuEvent ev) {
+                SwingUtilities.invokeLater(() -> Toolkit.getDefaultToolkit().removeAWTEventListener(dl));
+            }
+            public void popupMenuCanceled(PopupMenuEvent ev) {}
+            public void popupMenuWillBecomeVisible(PopupMenuEvent ev) {}
         });
 
-        // Position dialog and show popup inside it
-        Point screen = e.getLocationOnScreen();
-        dialog.setLocation(screen);
-        dialog.setVisible(true);
-        popup.show(dialog, 0, 0);
-
-        // Resize dialog to fit popup after shown
-        SwingUtilities.invokeLater(() -> {
-            Dimension ps = popup.getPreferredSize();
-            dialog.setSize(ps.width + 2, ps.height + 2);
-        });
+        popup.setInvoker(popup);
+        popup.setVisible(true);
     }
 
     private static Image loadTrayIcon() {

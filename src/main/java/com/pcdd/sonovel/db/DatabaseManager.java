@@ -134,31 +134,32 @@ public class DatabaseManager {
                         value TEXT NOT NULL
                     )
                     """);
+            // 邀请码表
+            stmt.execute("""
+                    CREATE TABLE IF NOT EXISTS invite_codes (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        code TEXT NOT NULL UNIQUE,
+                        max_uses INTEGER NOT NULL DEFAULT 1,
+                        used_count INTEGER NOT NULL DEFAULT 0,
+                        created_at INTEGER NOT NULL,
+                        created_by TEXT NOT NULL
+                    )
+                    """);
             // 初始化默认配置
-            stmt.execute("""
-                    INSERT OR IGNORE INTO sys_config VALUES ('contact_info', '请联系管理员')
-                    """);
-            stmt.execute("""
-                    INSERT OR IGNORE INTO sys_config VALUES ('maintenance_mode', 'false')
-                    """);
-            stmt.execute("""
-                    INSERT OR IGNORE INTO sys_config VALUES ('maintenance_reason', '')
-                    """);
-            stmt.execute("""
-                    INSERT OR IGNORE INTO sys_config VALUES ('api_search_rate', '10/60')
-                    """);
-            stmt.execute("""
-                    INSERT OR IGNORE INTO sys_config VALUES ('api_download_rate', '3/3600')
-                    """);
-            stmt.execute("""
-                    INSERT OR IGNORE INTO sys_config VALUES ('web_search_rate', '30/60')
-                    """);
-            stmt.execute("""
-                    INSERT OR IGNORE INTO sys_config VALUES ('web_download_rate', '5/3600')
-                    """);
-            stmt.execute("""
-                    INSERT OR IGNORE INTO sys_config VALUES ('web_visit_rate', '60/60')
-                    """);
+            stmt.execute("INSERT OR IGNORE INTO sys_config VALUES ('contact_info', '请联系管理员')");
+            stmt.execute("INSERT OR IGNORE INTO sys_config VALUES ('maintenance_mode', 'false')");
+            stmt.execute("INSERT OR IGNORE INTO sys_config VALUES ('maintenance_reason', '')");
+            stmt.execute("INSERT OR IGNORE INTO sys_config VALUES ('api_search_rate', '10/60')");
+            stmt.execute("INSERT OR IGNORE INTO sys_config VALUES ('api_download_rate', '3/3600')");
+            stmt.execute("INSERT OR IGNORE INTO sys_config VALUES ('web_search_rate', '30/60')");
+            stmt.execute("INSERT OR IGNORE INTO sys_config VALUES ('web_download_rate', '5/3600')");
+            stmt.execute("INSERT OR IGNORE INTO sys_config VALUES ('web_visit_rate', '60/60')");
+            stmt.execute("INSERT OR IGNORE INTO sys_config VALUES ('invite_code_enabled', 'false')");
+            stmt.execute("INSERT OR IGNORE INTO sys_config VALUES ('invite_code_prompt', '需要邀请码才能注册，请联系管理员获取。')");
+
+            // Migrate: add show_on_login and dismissable columns to announcements if missing
+            try { stmt.execute("ALTER TABLE announcements ADD COLUMN show_on_login INTEGER NOT NULL DEFAULT 0"); } catch (Exception ignored) {}
+            try { stmt.execute("ALTER TABLE announcements ADD COLUMN dismissable INTEGER NOT NULL DEFAULT 0"); } catch (Exception ignored) {}
         }
     }
 

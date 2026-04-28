@@ -14,6 +14,7 @@ public class AdminServlet extends HttpServlet {
     private final HistoryRepository histRepo = new HistoryRepository();
     private final TokenRepository tokenRepo = new TokenRepository();
     private final ConfigRepository configRepo = new ConfigRepository();
+    private final InviteCodeRepository inviteCodeRepo = new InviteCodeRepository();
     private final DatabaseManager db = DatabaseManager.getInstance();
 
     @Override protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
@@ -24,6 +25,7 @@ public class AdminServlet extends HttpServlet {
             else if(p.endsWith("/api/admin/logs")) listLogs(resp);
             else if(p.endsWith("/api/admin/bannedlog")) listBannedLog(resp);
             else if(p.endsWith("/api/admin/config")) listConfig(resp);
+            else if(p.endsWith("/api/admin/invite-codes")) listInviteCodes(resp);
             else RespUtils.writeError(resp,404,"?");
         }catch(Exception e){RespUtils.writeError(resp,500,e.getMessage());}
     }
@@ -73,7 +75,41 @@ public class AdminServlet extends HttpServlet {
                     if(!key.isEmpty()) configRepo.set(key, val);
                     RespUtils.writeJson(resp, JSONUtil.createObj().set("message","配置已更新"));
                 }
-                default -> RespUtils.writeError(resp,400,"未知操作: "+action);
+                default -> {
+                    // invite-code operations
+                    switch(action) {
+                        case "invite-gen" -> {
+                            int count = b.getInt("count", 1);
+                            int maxUses = b.getInt("maxUses", 1);
+                            String createdBy = (String) req.getAttribute("username");
+                            String chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+                            Random rnd = new Random();
+                            List<String> codes = new ArrayList<>();
+                            for (int i = 0; i < count; i++) {
+                                StringBuilder sb = new StringBuilder();
+                                for (int j = 0; j < 8; j++) sb.append(chars.charAt(rnd.nextInt(chars.length())));
+                                inviteCodeRepo.create(sb.toString(), maxUses, createdBy);
+                                codes.add(sb.toString());
+                            }
+                            RespUtils.writeJson(resp, JSONUtil.createObj().set("codes", codes));
+                        }
+                        case "invite-del" -> {
+                            inviteCodeRepo.delete(b.getInt("id", 0));
+                            RespUtils.writeJson(resp, JSONUtil.createObj().set("message","已删除"));
+                        }
+                        case "invite-batch-del" -> {
+                            List<Integer> ids = b.getBeanList("ids", Integer.class);
+                            inviteCodeRepo.batchDelete(ids);
+                            RespUtils.writeJson(resp, JSONUtil.createObj().set("message","已批量删除"));
+                        }
+                        case "invite-config" -> {
+                            configRepo.set("invite_code_enabled", b.getStr("enabled","false"));
+                            configRepo.set("invite_code_prompt", b.getStr("prompt",""));
+                            RespUtils.writeJson(resp, JSONUtil.createObj().set("message","已保存"));
+                        }
+                        default -> RespUtils.writeError(resp,400,"未知操作: "+action);
+                    }
+                }
             }
         }catch(Exception e){RespUtils.writeError(resp,500,e.getMessage());}
     }
@@ -98,6 +134,8 @@ public class AdminServlet extends HttpServlet {
         Map<String,String> map = new LinkedHashMap<>();
         map.put("contact_info",configRepo.get("contact_info"));
         map.put("gh_update_proxy",configRepo.get("gh_update_proxy"));
+        map.put("invite_code_enabled",configRepo.get("invite_code_enabled"));
+        map.put("invite_code_prompt",configRepo.get("invite_code_prompt"));
         map.put("api_search_rate",configRepo.get("api_search_rate"));
         map.put("api_download_rate",configRepo.get("api_download_rate"));
         map.put("web_search_rate",configRepo.get("web_search_rate"));
@@ -120,6 +158,10 @@ public class AdminServlet extends HttpServlet {
     }
     private void unbanUserIp(int uid) {
         AuthServlet.unbanIp("banned:"+uid);
+    }
+
+    private void listInviteCodes(HttpServletResponse resp) {
+        RespUtils.writeJson(resp, inviteCodeRepo.findAll());
     }
 
 }

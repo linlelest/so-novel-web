@@ -42,6 +42,8 @@ public class WebServer {
             Console.log(render("➜ Local: http://localhost:{}/", "blue"), port);
             // 启动自动更新定时器（每周日 UTC 07:00 检测并安装）
             AutoUpdater.start();
+            // 启动下载文件自动清理（15 分钟 TTL）
+            DownloadCleaner.start();
             server.join();
         } catch (Exception e) {
             Console.error(e, render("✖ Startup failed.", "red"));

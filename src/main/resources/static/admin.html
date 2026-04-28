@@ -21,7 +21,7 @@ table{width:100%;border-collapse:collapse}th,td{padding:8px 10px;text-align:left
 /* Toggle switch */
 .sw{position:relative;display:inline-block;width:48px;height:26px;flex-shrink:0}.sw input{opacity:0;width:0;height:0}.sl{position:absolute;cursor:pointer;inset:0;background:#ccc;transition:.3s;border-radius:26px}.sl:before{position:absolute;content:"";height:20px;width:20px;left:3px;bottom:3px;background:#fff;transition:.3s;border-radius:50%}input:checked+.sl{background:var(--ok)}input:checked+.sl:before{transform:translateX(22px)}</style></head><body>
 <div class="hd"><h1>📊 管理后台</h1><div class="ha"><button class="thm-btn" id="themeBtn" title="切换主题">🌓</button><a href="/" class="btn">返回首页</a><button class="btn btn-d" id="loBtn">退出</button></div></div>
-<div class="container"><div class="tabs"><div class="tab active" data-tab="ann">📢 公告</div><div class="tab" data-tab="user">👥 用户</div><div class="tab" data-tab="cfg">⚙ 配置</div><div class="tab" data-tab="maint">🔧 维护</div><div class="tab" data-tab="log">📋 日志</div><div class="tab" data-tab="banlog">🚫 封号名单</div></div>
+<div class="container"><div class="tabs"><div class="tab active" data-tab="ann">📢 公告</div><div class="tab" data-tab="user">👥 用户</div><div class="tab" data-tab="cfg">⚙ 配置</div><div class="tab" data-tab="maint">🔧 维护</div><div class="tab" data-tab="log">📋 日志</div><div class="tab" data-tab="banlog">🚫 封号名单</div><div class="tab" data-tab="invite">🔐 邀请码</div></div>
 
 <div class="tab-content active" id="tab-ann"><div class="card"><h2>系统公告</h2><button class="btn-p" id="addA">+ 发布公告</button><div class="loading" id="al">加载中...</div><div id="aw" style="display:none"><table><thead><tr><th>ID</th><th>标题</th><th>置顶</th><th>时间</th><th>操作</th></tr></thead><tbody id="at"></tbody></table></div></div></div>
 
@@ -46,6 +46,16 @@ table{width:100%;border-collapse:collapse}th,td{padding:8px 10px;text-align:left
 <div class="tab-content" id="tab-log"><div class="card"><h2>下载日志</h2><div class="loading" id="ll">加载中...</div><div id="lw" style="display:none"><table><thead><tr><th>书名</th><th>作者</th><th>格式</th><th>时间</th></tr></thead><tbody id="lt"></tbody></table></div></div></div>
 
 <div class="tab-content" id="tab-banlog"><div class="card"><h2>严重违规·永久封号名单</h2><div class="loading" id="bl">加载中...</div><div id="bw" style="display:none"><div id="blist"></div></div></div></div>
+
+<div class="tab-content" id="tab-invite"><div class="card"><h2>🔐 邀请码管理</h2>
+<div style="margin-bottom:12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px;background:var(--bg);border-radius:8px">
+  <label style="display:flex;align-items:center;gap:6px;font-size:.85rem"><input type="checkbox" id="inviteToggle"> 启用邀请码注册</label>
+  <button class="btn-p" id="inviteGenBtn" style="margin:0;padding:6px 14px">批量生成</button>
+  <button class="abtn abtn-del" id="inviteBatchDel" style="padding:6px 14px">批量删除</button>
+</div>
+<button class="btn-p" id="invitePromptBtn" style="padding:6px 14px;margin-bottom:10px">📝 编辑邀请提示</button>
+<div class="loading" id="il">加载中...</div>
+<div id="iw" style="display:none"><table><thead><tr><th><input type="checkbox" id="inviteSelectAll"></th><th>邀请码</th><th>限制次数</th><th>已使用</th><th>创建人</th><th>操作</th></tr></thead><tbody id="it"></tbody></table></div></div></div>
 </div>
 
 <!-- Announcement modal -->
@@ -54,12 +64,29 @@ table{width:100%;border-collapse:collapse}th,td{padding:8px 10px;text-align:left
 <div class="fg"><label>内容(Markdown)</label><div class="md-tb" id="mtb"><button data-md="**${s}**">B</button><button data-md="*${s}*"><i>I</i></button><button data-md="# ${s}">H1</button><button data-md="## ${s}">H2</button><button data-md="### ${s}">H3</button><button data-md="[${s}](url)">🔗</button><button data-md="`${s}`">`</button><button data-md="\n```\n${s}\n```\n">```</button><button data-md="- ${s}">•</button><button data-md="> ${s}">❝</button><button id="pvBtn">👁预览</button></div>
 <textarea class="md-ed" id="aco"></textarea><div class="md-pv" id="apv" style="display:none"></div></div>
 <div class="fg"><label class="ck"><input type="checkbox" id="api"> 置顶</label></div>
+<div class="fg" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+  <label class="ck"><input type="checkbox" id="aShowLogin"> 在登录/注册页显示</label>
+  <div id="aDismissOpt" style="display:none;margin-left:20px;margin-top:4px">
+    <label class="ck"><input type="checkbox" id="aDismiss"> 显示"不再显示"按钮</label>
+  </div>
+</div>
 <button class="btn-p" id="as" style="width:100%">保存</button></div></div>
 
 <!-- Delete user modal -->
 <div class="modal-o" id="dm"><div class="modal"><button class="mclose" id="dmc">&times;</button><h3>删除用户</h3><input type="hidden" id="duid">
 <div class="fg"><label>删除理由（必填）</label><textarea id="dreason" placeholder="填写删除理由..."></textarea></div>
 <button class="btn-p" id="dok" style="width:100%;background:var(--danger)">确认删除</button></div></div>
+
+<!-- Invite code modals -->
+<div class="modal-o" id="inviteGenModal"><div class="modal"><button class="mclose" id="igc">&times;</button><h3>批量生成邀请码</h3>
+<div class="fg"><label>生成数量</label><input type="number" id="igCount" value="10" min="1" max="100"></div>
+<div class="fg"><label>每个使用次数上限（0=不限）</label><input type="number" id="igMaxUses" value="1" min="0"></div>
+<button class="btn-p" id="igDo" style="width:100%">生成</button></div></div>
+
+<div class="modal-o" id="invitePromptModal"><div class="modal"><button class="mclose" id="ipc">&times;</button><h3>邀请提示（用户注册时显示）</h3>
+<div class="fg"><div class="md-tb" id="iptb"><button data-md="**${s}**">B</button><button data-md="*${s}*"><i>I</i></button><button data-md="# ${s}">H1</button><button data-md="## ${s}">H2</button><button data-md="### ${s}">H3</button><button data-md="[${s}](url)">🔗</button><button data-md="`${s}`">`</button><button data-md="\n\`\`\`\n${s}\n\`\`\`\n">```</button></div>
+<textarea class="md-ed" id="ipContent" rows="4" placeholder="输入提示内容（Markdown）…"></textarea></div>
+<button class="btn-p" id="ipDo" style="width:100%">保存提示</button></div></div>
 
 <div class="toast" id="toast"></div>
 
@@ -77,11 +104,12 @@ function md2html(tx){if(!tx)return'';var h=tx.replace(/&/g,'&amp;').replace(/</g
 async function chk(){try{var r=await fetch('/api/auth/check');var d=gd(await r.json());if(!d.authenticated||d.role!=='admin'){window.location.href='/login.html';return null}return d}catch(e){window.location.href='/login.html';return null}}
 
 // Announcements
-async function la(){try{var r=await fetch('/api/admin/announcements');var list=gd(await r.json());var t=$('at');if(!list||!list.length){t.innerHTML='<tr><td colspan="5" style="text-align:center;color:#999">暂无</td></tr>'}else{t.innerHTML=list.map(function(a){return'<tr><td>'+a.id+'</td><td>'+a.title+'</td><td>'+(a.pinned?'<span class="badge badge-p">📌</span>':'-')+'</td><td>'+new Date(a.updatedAt).toLocaleString('zh-CN')+'</td><td><button class="abtn abtn-ed" onclick="ea('+a.id+')">编辑</button> <button class="abtn abtn-del" onclick="da('+a.id+')">删除</button></td></tr>'}).join('')}$('al').style.display='none';$('aw').style.display='block'}catch(e){$('al').textContent='失败'}}
-window.ea=async function(id){try{var r=await fetch('/api/announcements/detail?id='+id);var a=gd(await r.json());$('ai').value=a.id;$('ati').value=a.title;$('aco').value=a.content||'';$('api').checked=a.pinned===1;$('amt').textContent='编辑公告';$('apv').style.display='none';$('aco').style.display='';$('pvBtn').textContent='👁预览';$('am').classList.add('show')}catch(e){alert('加载失败')}};
+async function la(){try{var r=await fetch('/api/admin/announcements');var list=gd(await r.json());var t=$('at');if(!list||!list.length){t.innerHTML='<tr><td colspan="7" style="text-align:center;color:#999">暂无</td></tr>'}else{t.innerHTML=list.map(function(a){return'<tr><td>'+a.id+'</td><td>'+a.title+'</td><td>'+(a.pinned?'<span class="badge badge-p">📌</span>':'-')+'</td><td>'+(a.showOnLogin?'<span class="badge badge-g">登录页</span>':'-')+'</td><td>'+new Date(a.updatedAt).toLocaleString('zh-CN')+'</td><td><button class="abtn abtn-ed" onclick="ea('+a.id+')">编辑</button> <button class="abtn abtn-del" onclick="da('+a.id+')">删除</button></td></tr>'}).join('')}$('al').style.display='none';$('aw').style.display='block'}catch(e){$('al').textContent='失败'}}
+window.ea=async function(id){try{var r=await fetch('/api/announcements/detail?id='+id);var a=gd(await r.json());$('ai').value=a.id;$('ati').value=a.title;$('aco').value=a.content||'';$('api').checked=a.pinned===1;$('aShowLogin').checked=a.showOnLogin===1;$('aDismiss').checked=a.dismissable===1;$('aDismissOpt').style.display=a.showOnLogin===1?'':'none';$('amt').textContent='编辑公告';$('apv').style.display='none';$('aco').style.display='';$('pvBtn').textContent='👁预览';$('am').classList.add('show')}catch(e){alert('加载失败')}};
 window.da=async function(id){if(!confirm('删除?'))return;try{var r=await fetch('/api/admin/announcements?id='+id,{method:'DELETE'});if(r.ok){t('已删除');la()}}catch(e){alert('失败')}};
-$('addA').addEventListener('click',function(){$('ai').value='';$('ati').value='';$('aco').value='';$('api').checked=false;$('amt').textContent='发布公告';$('apv').style.display='none';$('aco').style.display='';$('pvBtn').textContent='👁预览';$('am').classList.add('show')});
-$('as').addEventListener('click',async function(){var id=$('ai').value,ti=$('ati').value.trim(),co=$('aco').value,pi=$('api').checked?1:0;if(!ti){t('标题不能为空','e');return}try{var m=id?'PUT':'POST',bd=id?{id:parseInt(id),title:ti,content:co,pinned:pi}:{title:ti,content:co,pinned:pi};var r=await fetch('/api/admin/announcements',{method:m,headers:{'Content-Type':'application/json'},body:JSON.stringify(bd)});if(r.ok){t(id?'已更新':'已发布');$('am').classList.remove('show');la()}}catch(e){alert('保存失败')}});
+$('addA').addEventListener('click',function(){$('ai').value='';$('ati').value='';$('aco').value='';$('api').checked=false;$('aShowLogin').checked=false;$('aDismiss').checked=false;$('aDismissOpt').style.display='none';$('amt').textContent='发布公告';$('apv').style.display='none';$('aco').style.display='';$('pvBtn').textContent='👁预览';$('am').classList.add('show')});
+$('aShowLogin').addEventListener('change',function(){$('aDismissOpt').style.display=this.checked?'':'none'});
+$('as').addEventListener('click',async function(){var id=$('ai').value,ti=$('ati').value.trim(),co=$('aco').value,pi=$('api').checked?1:0,sl=$('aShowLogin').checked?1:0,dc=$('aDismiss').checked?1:0;if(!ti){t('标题不能为空','e');return}try{var m=id?'PUT':'POST',bd=id?{id:parseInt(id),title:ti,content:co,pinned:pi,showOnLogin:sl,dismissable:dc}:{title:ti,content:co,pinned:pi,showOnLogin:sl,dismissable:dc};var r=await fetch('/api/admin/announcements',{method:m,headers:{'Content-Type':'application/json'},body:JSON.stringify(bd)});if(r.ok){t(id?'已更新':'已发布');$('am').classList.remove('show');la()}}catch(e){alert('保存失败')}});
 $('amc').addEventListener('click',function(){$('am').classList.remove('show')});
 $('am').addEventListener('click',function(e){if(e.target===this)this.classList.remove('show')});
 $('pvBtn').addEventListener('click',function(){var p=$('apv'),e=$('aco');if(p.style.display==='none'){p.innerHTML=md2html(e.value);p.style.display='block';e.style.display='none';this.textContent='✏编辑'}else{p.style.display='none';e.style.display='';this.textContent='👁预览'}});
@@ -98,7 +126,7 @@ $('dm').addEventListener('click',function(e){if(e.target===this)this.classList.r
 
 // Config
 async function lcfg(){try{var r=await fetch('/api/admin/config');var cfg=gd(await r.json());var html='';
-var labels={contact_info:'管理员联系方式\n(封禁/删除时显示给用户)',gh_update_proxy:'GitHub更新代理前缀\n(仅下载时使用，如：https://cdn.gh-proxy.org/)',api_search_rate:'API搜索速率\n(次数/秒)',api_download_rate:'API下载速率\n(次数/秒)',web_search_rate:'Web搜索速率\n(次数/秒)',web_download_rate:'Web下载速率\n(次数/秒)',web_visit_rate:'Web访问速率\n(次数/秒)'};
+var labels={contact_info:'管理员联系方式\n(封禁/删除时显示给用户)',gh_update_proxy:'GitHub更新代理前缀\n(仅下载时使用，如：https://cdn.gh-proxy.org/)',invite_code_enabled:'邀请码系统状态(on/off 用上面的开关)',invite_code_prompt:'邀请提示内容',api_search_rate:'API搜索速率\n(次数/秒)',api_download_rate:'API下载速率\n(次数/秒)',web_search_rate:'Web搜索速率\n(次数/秒)',web_download_rate:'Web下载速率\n(次数/秒)',web_visit_rate:'Web访问速率\n(次数/秒)'};
 for(var k in labels){var val=cfg[k]||'';html+='<div class="fg"><label>'+labels[k].replace(/\n/g,'<br>')+'</label><div style="display:flex;gap:6px"><input type="text" value="'+val+'" data-key="'+k+'" style="flex:1"><button class="btn-p" onclick="saveCfg(\''+k+'\',this.previousElementSibling.value)" style="width:60px;margin:0;font-size:.75rem">保存</button></div></div>'}$('cfgGrid').innerHTML=html;$('cl').style.display='none';$('cw').style.display='block'}catch(e){$('cl').textContent='失败'}}
 window.saveCfg=async function(k,v){try{var r=await fetch('/api/admin/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'config',key:k,value:v})});if(r.ok)t('已保存')}catch(e){alert('失败')}};
 
@@ -157,5 +185,20 @@ document.querySelectorAll('.tab').forEach(function(tab){tab.addEventListener('cl
 
 $('loBtn').addEventListener('click',async function(){await fetch('/api/auth/logout',{method:'POST'});window.location.href='/login.html'});
 
-chk().then(function(s){if(s){la();lu();lcfg();ll();lbl();checkUpd();loadMaint()}});
+// Invite codes
+async function lic(){try{var r=await fetch('/api/admin/invite-codes');var list=gd(await r.json());var t=$('it');var cfg=await(await fetch('/api/admin/config')).json();cfg=gd(cfg);$('inviteToggle').checked=cfg.invite_code_enabled==='true';if(!list||!list.length){t.innerHTML='<tr><td colspan="6" style="text-align:center;color:#999">暂无邀请码</td></tr>'}else{t.innerHTML=list.map(function(c){return'<tr><td><input type="checkbox" class="icb" data-id="'+c.id+'"></td><td>'+c.code+'</td><td>'+(c.maxUses===0?'不限':c.maxUses)+'</td><td>'+c.usedCount+'</td><td>'+(c.createdBy||'')+'</td><td><button class="abtn abtn-del" onclick="dc('+c.id+')">删除</button></td></tr>'}).join('')}$('il').style.display='none';$('iw').style.display='block';$('inviteSelectAll').checked=false}catch(e){$('il').textContent='失败'}}
+window.dc=async function(id){if(!confirm('删除邀请码?'))return;await fetch('/api/admin/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'invite-del',id:id})});lic();t('已删除')};
+$('inviteToggle').addEventListener('change',function(){fetch('/api/admin/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'invite-config',enabled:this.checked?'true':'false',prompt:window._ip||''})}).then(function(){t('已保存')})});
+$('inviteGenBtn').addEventListener('click',function(){$('inviteGenModal').classList.add('show')});
+$('igc').addEventListener('click',function(){$('inviteGenModal').classList.remove('show')});
+$('inviteGenModal').addEventListener('click',function(e){if(e.target===this)this.classList.remove('show')});
+$('igDo').addEventListener('click',async function(){var c=parseInt($('igCount').value)||10,u=parseInt($('igMaxUses').value);var r=await fetch('/api/admin/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'invite-gen',count:c,maxUses:u})});var d=gd(await r.json());ric(d.codes)});function ric(codes){var h='<div class="card"><h3>生成成功 ('+codes.length+'个)</h3><div style="max-height:200px;overflow-y:auto;font-family:Courier New;font-size:.85rem;padding:8px;background:var(--bg);border-radius:6px">'+codes.join('<br>')+'</div><button class="btn-p" onclick="cp_ic()" style="margin-top:8px">复制全部</button></div>';var ex=$('id_');if(ex)ex.remove();var d=document.createElement('div');d.id='id_';d.innerHTML=h;d.querySelector('.btn-p').addEventListener('click',function(){cp_ic(codes)});$('tab-invite').insertBefore(d,$('tab-invite').firstChild);$('inviteGenModal').classList.remove('show');lic()}window.cp_ic=function(codes){var v=codes.join('\n');var ta=document.createElement('textarea');ta.value=v;ta.style.position='fixed';ta.style.left='-9999px';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);t('已复制')}
+$('inviteBatchDel').addEventListener('click',async function(){var cbs=document.querySelectorAll('.icb:checked');if(!cbs.length){t('请先选择邀请码','e');return}if(!confirm('确定删除选中的 '+cbs.length+' 个邀请码?'))return;var ids=[];cbs.forEach(function(cb){ids.push(parseInt(cb.dataset.id))});var r=await fetch('/api/admin/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'invite-batch-del',ids:ids})});lic();t('已删除')});
+$('inviteSelectAll').addEventListener('change',function(){document.querySelectorAll('.icb').forEach(function(cb){cb.checked=this.checked})});
+$('invitePromptBtn').addEventListener('click',async function(){try{var r=await fetch('/api/admin/config');var d=gd(await r.json());$('ipContent').value=d.invite_code_prompt||'';window._ip=d.invite_code_prompt||'';$('invitePromptModal').classList.add('show')}catch(e){}});
+$('ipc').addEventListener('click',function(){$('invitePromptModal').classList.remove('show')});
+$('invitePromptModal').addEventListener('click',function(e){if(e.target===this)this.classList.remove('show')});
+$('ipDo').addEventListener('click',async function(){var v=$('ipContent').value;window._ip=v;await fetch('/api/admin/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'invite-config',enabled:$('inviteToggle').checked?'true':'false',prompt:v})});t('已保存');$('invitePromptModal').classList.remove('show')});
+$('iptb').addEventListener('click',function(e){var b=e.target.closest('button[data-md]');if(!b)return;var tpl=b.dataset.md,ta=$('ipContent'),s=ta.selectionStart,se=ta.selectionEnd,sel=ta.value.substring(s,se)||'text',ins=tpl.replace(/\$\{s\}/g,sel);ta.value=ta.value.substring(0,s)+ins+ta.value.substring(se);ta.focus();ta.setSelectionRange(s+ins.indexOf(sel)+sel.length,s+ins.indexOf(sel)+sel.length)});
+chk().then(function(s){if(s){la();lu();lcfg();ll();lbl();lic();checkUpd();loadMaint()}});
 </script></body></html>
