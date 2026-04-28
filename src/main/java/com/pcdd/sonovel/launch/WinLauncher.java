@@ -150,20 +150,22 @@ public class WinLauncher {
         popup.setLocation(e.getXOnScreen(), e.getYOnScreen());
 
         // Global AWT listener: click outside → dismiss
+        Toolkit tk = Toolkit.getDefaultToolkit();
         AWTEventListener dl = ev -> {
             if (ev instanceof MouseEvent me && me.getID() == MouseEvent.MOUSE_PRESSED) {
-                if (!popup.isShowing()) { Toolkit.getDefaultToolkit().removeAWTEventListener(dl); return; }
+                if (!popup.isShowing()) return;
                 Component src = me.getComponent();
                 if (src == null || !SwingUtilities.isDescendingFrom(src, popup)) {
                     popup.setVisible(false);
-                    Toolkit.getDefaultToolkit().removeAWTEventListener(dl);
                 }
             }
         };
-        Toolkit.getDefaultToolkit().addAWTEventListener(dl, AWTEvent.MOUSE_EVENT_MASK);
+        tk.addAWTEventListener(dl, AWTEvent.MOUSE_EVENT_MASK);
+        final AWTEventListener fdl = dl;
         popup.addPopupMenuListener(new PopupMenuListener() {
             public void popupMenuWillBecomeInvisible(PopupMenuEvent ev) {
-                SwingUtilities.invokeLater(() -> Toolkit.getDefaultToolkit().removeAWTEventListener(dl));
+                SwingUtilities.invokeLater(() -> tk.removeAWTEventListener(fdl));
+            }
             }
             public void popupMenuCanceled(PopupMenuEvent ev) {}
             public void popupMenuWillBecomeVisible(PopupMenuEvent ev) {}
