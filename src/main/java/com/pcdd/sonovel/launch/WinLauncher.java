@@ -6,6 +6,7 @@ import com.pcdd.sonovel.web.WebServer;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.event.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
