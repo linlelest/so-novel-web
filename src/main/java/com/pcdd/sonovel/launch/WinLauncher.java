@@ -166,7 +166,6 @@ public class WinLauncher {
             public void popupMenuWillBecomeInvisible(PopupMenuEvent ev) {
                 SwingUtilities.invokeLater(() -> tk.removeAWTEventListener(fdl));
             }
-            }
             public void popupMenuCanceled(PopupMenuEvent ev) {}
             public void popupMenuWillBecomeVisible(PopupMenuEvent ev) {}
         });
