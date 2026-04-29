@@ -26,9 +26,6 @@ var theme=localStorage.getItem('sonovel-theme')||'light';document.documentElemen
 $('themeBtn').addEventListener('click',function(){theme=theme==='light'?'dark':'light';document.documentElement.setAttribute('data-theme',theme);localStorage.setItem('sonovel-theme',theme);this.textContent=theme==='light'?'🌙':'☀️'});
 if(theme==='dark')$('themeBtn').textContent='☀️';
 
-async function init(){try{var r=await fetch('/api/auth/check-admin');var d=gd(await r.json());$('load').style.display='none';
-if(!d.hasAdmin){show($('adminReg'))}else{show($('loginF'))}}catch(e){$('load').textContent='服务器连接失败'}}
-
 $('lgBtn').addEventListener('click',async function(){var u=$('lgUser').value.trim(),p=$('lgPw').value,rb=$('remember').checked;
 if(!u||!p){t('请输入用户名和密码','e');return}
 try{var r=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p,remember:rb})});var d=await r.json();
@@ -51,4 +48,4 @@ $('apClose').addEventListener('click',function(){$('annPopup').style.display='no
 $('apDismiss').addEventListener('click',function(){localStorage.setItem('sonovel-login-ann-dismiss','1');$('annPopup').style.display='none'});
 async function init(){try{var r=await fetch('/api/auth/check-admin');var d=gd(await r.json());$('load').style.display='none';if(!d.hasAdmin){show($('adminReg'))}else{show($('loginF'))}}catch(e){$('load').textContent='服务器连接失败'}
 try{var cfg=gd(await(await fetch('/api/admin/config')).json());if(cfg.invite_code_enabled==='true')$('icFg').style.display=''}catch(e){}
-if(!localStorage.getItem('sonovel-login-ann-dismiss'))lAnn()}</script></body></html>
+if(!localStorage.getItem('sonovel-login-ann-dismiss'))lAnn();init();</script></body></html>
