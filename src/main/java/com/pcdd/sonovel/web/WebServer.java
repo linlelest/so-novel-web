@@ -74,6 +74,9 @@ public class WebServer {
 
         // 公告
         context.addServlet(AnnouncementServlet.class, "/api/announcements/*");
+        context.addServlet(AnnouncementServlet.class, "/api/announcements/list");
+        context.addServlet(AnnouncementServlet.class, "/api/announcements/detail");
+        context.addServlet(AnnouncementServlet.class, "/api/announcements/login-page");
         context.addServlet(AnnouncementServlet.class, "/api/admin/announcements");
 
         // 更新检查

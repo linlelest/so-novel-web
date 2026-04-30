@@ -18,11 +18,12 @@ public class AuthServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) {
-        try { String p = req.getRequestURI(); JSONObject b = JSONUtil.parseObj(req.getReader());
+        try { String p = req.getRequestURI();
+            if (p.endsWith("/api/auth/logout")) { logout(req, resp); return; }
+            JSONObject b = JSONUtil.parseObj(req.getReader());
             if (p.endsWith("/api/auth/login")) login(b, req, resp);
             else if (p.endsWith("/api/auth/register")) register(b, req, resp);
             else if (p.endsWith("/api/auth/admin-register")) adminReg(b, resp);
-            else if (p.endsWith("/api/auth/logout")) logout(req, resp);
         } catch(Exception e) { RespUtils.writeError(resp,500,e.getMessage()); }
     }
     @Override
