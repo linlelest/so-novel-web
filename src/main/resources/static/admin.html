@@ -20,6 +20,7 @@ table{width:100%;border-collapse:collapse}th,td{padding:8px 10px;text-align:left
 .thm-btn{background:none;border:1px solid var(--border);border-radius:20px;cursor:pointer;font-size:1.2rem;padding:6px 12px;color:var(--text)}.config-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:768px){.config-grid{grid-template-columns:1fr}}
 /* Toggle switch */
 .sw{position:relative;display:inline-block;width:48px;height:26px;flex-shrink:0}.sw input{opacity:0;width:0;height:0}.sl{position:absolute;cursor:pointer;inset:0;background:#ccc;transition:.3s;border-radius:26px}.sl:before{position:absolute;content:"";height:20px;width:20px;left:3px;bottom:3px;background:#fff;transition:.3s;border-radius:50%}input:checked+.sl{background:var(--ok)}input:checked+.sl:before{transform:translateX(22px)}</style></head><body>
+<script>if(document.cookie.indexOf('logged_in=')<0)location.replace('/login.html')</script>
 <div class="hd"><h1>📊 管理后台</h1><div class="ha"><button class="thm-btn" id="themeBtn" title="切换主题">🌓</button><a href="/" class="btn">返回首页</a><button class="btn btn-d" id="loBtn">退出</button></div></div>
 <div class="container"><div class="tabs"><div class="tab active" data-tab="ann">📢 公告</div><div class="tab" data-tab="user">👥 用户</div><div class="tab" data-tab="cfg">⚙ 配置</div><div class="tab" data-tab="maint">🔧 维护</div><div class="tab" data-tab="log">📋 日志</div><div class="tab" data-tab="banlog">🚫 封号名单</div><div class="tab" data-tab="invite">🔐 邀请码</div></div>
 

@@ -54,6 +54,9 @@ public class AuthServlet extends HttpServlet {
         boolean remember = b.getBool("remember", true);
         jakarta.servlet.http.Cookie ck = new jakarta.servlet.http.Cookie("sonovel_session",sid);
         ck.setPath("/"); ck.setMaxAge(remember ? 604800 : -1); ck.setHttpOnly(true); resp.addCookie(ck);
+        // Non-HttpOnly marker for client-side auth guard
+        jakarta.servlet.http.Cookie marker = new jakarta.servlet.http.Cookie("logged_in", "1");
+        marker.setPath("/"); marker.setMaxAge(remember ? 604800 : -1); marker.setHttpOnly(false); resp.addCookie(marker);
         // Record login IP for ban tracking
         try (java.sql.Connection c = DatabaseManager.getInstance().getConnection();
              java.sql.PreparedStatement ps = c.prepareStatement("UPDATE users SET last_ip=? WHERE id=?")) {
@@ -91,6 +94,8 @@ public class AuthServlet extends HttpServlet {
         String sid = AuthFilter.createSession(user.getId(),user.getUsername(),"admin");
         jakarta.servlet.http.Cookie ck = new jakarta.servlet.http.Cookie("sonovel_session",sid);
         ck.setPath("/"); ck.setMaxAge(86400); ck.setHttpOnly(true); resp.addCookie(ck);
+        jakarta.servlet.http.Cookie marker = new jakarta.servlet.http.Cookie("logged_in", "1");
+        marker.setPath("/"); marker.setMaxAge(86400); marker.setHttpOnly(false); resp.addCookie(marker);
         RespUtils.writeJson(resp, JSONUtil.createObj().set("username",user.getUsername()).set("role","admin").set("message","管理员注册成功"));
     }
 
@@ -104,6 +109,9 @@ public class AuthServlet extends HttpServlet {
             clearCookie.setMaxAge(0);
             clearCookie.setHttpOnly(true);
             resp.addCookie(clearCookie);
+            // Also clear marker cookie
+            jakarta.servlet.http.Cookie cm = new jakarta.servlet.http.Cookie("logged_in", "");
+            cm.setPath("/"); cm.setMaxAge(0); cm.setHttpOnly(false); resp.addCookie(cm);
         }
         RespUtils.writeJson(resp, JSONUtil.createObj().set("message","已登出"));
     }

@@ -20,23 +20,38 @@ public class LocalBookListServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
         int userId = (int) req.getAttribute("userId");
-
-        List<DownloadHistory> userHistory = historyRepo.findByUserId(userId);
         File dir = new File(AppConfigLoader.APP_CONFIG.getDownloadPath());
         List<LocalBookItem> list = new ArrayList<>();
 
-        for (DownloadHistory h : userHistory) {
-            String fn = h.getFileName();
-            if (fn == null || fn.isEmpty()) continue;
-            File f = new File(dir, fn);
-            // For bare filenames (old records), search subdirectories
-            if (!f.exists() && !fn.contains("/") && !fn.contains("\\")) {
-                File[] subs = dir.listFiles(File::isDirectory);
-                if (subs != null) {
-                    for (File sub : subs) {
-                        File candidate = new File(sub, fn);
-                        if (candidate.exists()) { f = candidate; fn = sub.getName() + "/" + fn; break; }
+        List<DownloadHistory> userHistory = historyRepo.findByUserId(userId);
+        if (!userHistory.isEmpty()) {
+            // Use history records (per-user)
+            for (DownloadHistory h : userHistory) {
+                String fn = h.getFileName();
+                if (fn == null || fn.isEmpty()) continue;
+                File f = new File(dir, fn);
+                if (!f.exists() && !fn.contains("/")) {
+                    File[] subs = dir.listFiles(File::isDirectory);
+                    if (subs != null) for (File sub : subs) {
+                        File c = new File(sub, fn); if (c.exists()) { f = c; fn = sub.getName()+"/"+fn; break; }
                     }
+                }
+                if (f.exists()) { LocalBookItem item = new LocalBookItem(); item.setName(fn); item.setSize(f.length()); item.setTimestamp(f.lastModified()); list.add(item); }
+            }
+        } else {
+            // No history yet — fallback: scan all download dirs (originally from old backend)
+            File[] subdirs = dir.listFiles(File::isDirectory);
+            if (subdirs != null) for (File sub : subdirs) {
+                File[] files = sub.listFiles(File::isFile);
+                if (files != null) for (File f : files) {
+                    String fn = sub.getName() + "/" + f.getName();
+                    LocalBookItem item = new LocalBookItem(); item.setName(fn); item.setSize(f.length()); item.setTimestamp(f.lastModified()); list.add(item);
+                }
+            }
+        }
+
+        RespUtils.writeJson(resp, list);
+    }
                 }
             }
             if (f.exists()) {
