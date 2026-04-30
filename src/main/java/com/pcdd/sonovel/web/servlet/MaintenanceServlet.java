@@ -34,6 +34,13 @@ public class MaintenanceServlet extends HttpServlet {
             listBannedLog(resp);
             return;
         }
+        if (path.equals("/api/public/invite-status")) {
+            JSONObject data = JSONUtil.createObj()
+                    .set("enabled", "true".equals(configRepo.get("invite_code_enabled")))
+                    .set("prompt", configRepo.get("invite_code_prompt"));
+            RespUtils.writeJson(resp, data);
+            return;
+        }
 
         // 公开和管理员都返回相同数据
         String enabled = configRepo.get("maintenance_mode");

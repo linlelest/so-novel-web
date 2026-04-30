@@ -192,6 +192,7 @@ public class AuthFilter implements Filter {
     private boolean isPublicPath(String p) {
         if (PUBLIC_PATHS.contains(p)) return true;
         if (p.startsWith("/api/auth/")) return true; if (p.startsWith("/api/public/")) return true;
+        if (p.startsWith("/api/announcements/")) return true;
         if (p.endsWith(".css")||p.endsWith(".js")||p.endsWith(".ico")||p.endsWith(".png")||p.endsWith(".svg")) return true;
         if (p.equals("/login.html")||p.equals("/register.html")||p.equals("/maintenance.html")||p.equals("/api-docs.html")||p.equals("/api.md")) return true;
         return false;
@@ -202,6 +203,7 @@ public class AuthFilter implements Filter {
         if (p.equals("/login.html")||p.equals("/maintenance.html")||p.equals("/api-docs.html")||p.equals("/api.md")) return true;
         if (p.equals("/api/auth/login")||p.equals("/api/auth/check")||p.equals("/api/auth/check-admin")) return true;
         if (p.startsWith("/api/public/")) return true;
+        if (p.startsWith("/api/announcements/")) return true;
         return false;
     }
     private String getClientIp(HttpServletRequest r) {

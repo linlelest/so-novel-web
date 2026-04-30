@@ -85,7 +85,7 @@ public class AuthServlet extends HttpServlet {
         jakarta.servlet.http.Cookie[] cs = req.getCookies();
         if(cs!=null) for(var c : cs) if("sonovel_session".equals(c.getName())) {
             AuthFilter.destroySession(c.getValue());
-            // Create NEW cookie for clearing (modifying request cookie is unreliable across containers)
+            // Clear the cookie by setting MaxAge=0 with same attributes
             jakarta.servlet.http.Cookie clearCookie = new jakarta.servlet.http.Cookie("sonovel_session", "");
             clearCookie.setPath("/");
             clearCookie.setMaxAge(0);
