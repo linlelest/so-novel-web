@@ -48,4 +48,4 @@ $('apClose').addEventListener('click',function(){$('annPopup').style.display='no
 $('apDismiss').addEventListener('click',function(){localStorage.setItem('sonovel-login-ann-dismiss','1');$('annPopup').style.display='none'});
 async function init(){try{var r=await fetch('/api/auth/check-admin');var d=gd(await r.json());$('load').style.display='none';if(!d.hasAdmin){show($('adminReg'))}else{show($('loginF'))}}catch(e){$('load').textContent='服务器连接失败'}
 try{var cfg=gd(await(await fetch('/api/admin/config')).json());if(cfg.invite_code_enabled==='true')$('icFg').style.display=''}catch(e){}
-if(!localStorage.getItem('sonovel-login-ann-dismiss'))lAnn();init();</script></body></html>
+if(!localStorage.getItem('sonovel-login-ann-dismiss'))lAnn();}init();</script></body></html>
