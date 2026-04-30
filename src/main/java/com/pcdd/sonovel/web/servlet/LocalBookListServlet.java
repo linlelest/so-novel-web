@@ -52,18 +52,4 @@ public class LocalBookListServlet extends HttpServlet {
 
         RespUtils.writeJson(resp, list);
     }
-                }
-            }
-            if (f.exists()) {
-                LocalBookItem item = new LocalBookItem();
-                item.setName(fn);
-                item.setSize(f.length());
-                item.setTimestamp(f.lastModified());
-                list.add(item);
-            }
-        }
-
-        RespUtils.writeJson(resp, list);
-    }
-
 }
