@@ -57,16 +57,17 @@ public class AdminServlet extends HttpServlet {
                     if("admin".equals(u.getRole())) { RespUtils.writeError(resp,400,"不能删除管理员"); return; }
                     revokeTokens(uid);
                     banUserIp(uid);
-                    // Log to banned_users_log
                     try (Connection c=db.getConnection();
                          PreparedStatement ps=c.prepareStatement("INSERT INTO banned_users_log(username,reason,action,created_at) VALUES(?,?,?,?)")) {
                         ps.setString(1,u.getUsername()); ps.setString(2,reason); ps.setString(3,"delete");
                         ps.setLong(4,System.currentTimeMillis()); ps.executeUpdate();
                     }
-                    // Delete user
+                    // Soft-delete: mark deleted_at, data kept for 30min after user tries to login
                     try (Connection c=db.getConnection();
-                         PreparedStatement ps=c.prepareStatement("DELETE FROM users WHERE id=?")) {
-                        ps.setInt(1,uid); ps.executeUpdate();
+                         PreparedStatement ps=c.prepareStatement("UPDATE users SET deleted_at=?,updated_at=? WHERE id=?")) {
+                        ps.setLong(1, System.currentTimeMillis());
+                        ps.setLong(2, System.currentTimeMillis());
+                        ps.setInt(3, uid); ps.executeUpdate();
                     }
                     RespUtils.writeJson(resp, JSONUtil.createObj().set("message","已删除"));
                 }
@@ -153,11 +154,17 @@ public class AdminServlet extends HttpServlet {
 
     private void banUserIp(int uid) {
         AuthUser u = userRepo.findById(uid); if(u==null) return;
-        // get IP from recent session orabstract
-        AuthServlet.banIp("banned:"+uid);
+        String ip = u.getLastIp();
+        if (ip != null && !ip.isEmpty() && !ip.startsWith("127.") && !ip.startsWith("0.")) {
+            AuthServlet.banIp(ip);
+        }
     }
     private void unbanUserIp(int uid) {
-        AuthServlet.unbanIp("banned:"+uid);
+        AuthUser u = userRepo.findById(uid); if(u==null) return;
+        String ip = u.getLastIp();
+        if (ip != null && !ip.isEmpty()) {
+            AuthServlet.unbanIp(ip);
+        }
     }
 
     private void listInviteCodes(HttpServletResponse resp) {

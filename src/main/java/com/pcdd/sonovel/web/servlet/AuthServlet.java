@@ -44,12 +44,21 @@ public class AuthServlet extends HttpServlet {
             if(AuthFilter.isUserDeleted(u)) { RespUtils.writeError(resp,410,"您的账户已被删除，"+configRepo.get("contact_info")); return; }
             RespUtils.writeError(resp,401,"用户名或密码错误"); return;
         }
+        if(user.getDeletedAt() != null && user.getDeletedAt() > 0) {
+            // User was soft-deleted — show deletion popup, trigger 30min cleanup timer
+            RespUtils.writeError(resp,410,"您的账户已被删除，"+configRepo.get("contact_info")); return;
+        }
         if(user.isBanned()) { RespUtils.writeError(resp,403,"账号已被封禁，"+configRepo.get("contact_info")); return; }
         if(!userRepo.verifyPassword(user,pw)) { RespUtils.writeError(resp,401,"用户名或密码错误"); return; }
         String sid = AuthFilter.createSession(user.getId(),user.getUsername(),user.getRole());
         boolean remember = b.getBool("remember", true);
         jakarta.servlet.http.Cookie ck = new jakarta.servlet.http.Cookie("sonovel_session",sid);
         ck.setPath("/"); ck.setMaxAge(remember ? 604800 : -1); ck.setHttpOnly(true); resp.addCookie(ck);
+        // Record login IP for ban tracking
+        try (java.sql.Connection c = DatabaseManager.getInstance().getConnection();
+             java.sql.PreparedStatement ps = c.prepareStatement("UPDATE users SET last_ip=? WHERE id=?")) {
+            ps.setString(1, ip); ps.setInt(2, user.getId()); ps.executeUpdate();
+        } catch(Exception ignored) {}
         RespUtils.writeJson(resp, JSONUtil.createObj().set("username",user.getUsername()).set("role",user.getRole()));
     }
 

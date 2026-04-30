@@ -120,8 +120,8 @@ public class AuthFilter implements Filter {
             SessionData sd = getSession(sid);
             if (sd != null) {
                 AuthUser u = userRepo.findById(sd.userId());
-                if (u == null) {
-                    // User was deleted from DB — session invalid, block access
+                if (u == null || (u.getDeletedAt() != null && u.getDeletedAt() > 0)) {
+                    // User was deleted — session invalid, block access
                     destroySession(sid);
                     String contact = configRepo.get("contact_info");
                     if (shouldRedirect(req)) {

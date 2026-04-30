@@ -25,24 +25,26 @@ public class DownloadCleaner {
 
     private static void cleanup() {
         String downloadPath = AppConfigLoader.APP_CONFIG.getDownloadPath();
-        if (downloadPath == null || downloadPath.isBlank()) return;
-        File dir = new File(downloadPath);
-        if (!dir.isDirectory()) return;
-
-        File[] subdirs = dir.listFiles(File::isDirectory);
-        if (subdirs == null) return;
-
-        long now = System.currentTimeMillis();
-        for (File sub : subdirs) {
-            // Directory name pattern: "书名 (作者) EXT" — only clean download dirs
-            if (!sub.getName().endsWith(" EPUB") && !sub.getName().endsWith(" TXT")
-                    && !sub.getName().endsWith(" HTML") && !sub.getName().endsWith(" PDF"))
-                continue;
-            long age = now - sub.lastModified();
-            if (age > TTL_MS) {
-                deleteRecursively(sub);
+        if (downloadPath != null && !downloadPath.isBlank()) {
+            File dir = new File(downloadPath);
+            if (dir.isDirectory()) {
+                File[] subdirs = dir.listFiles(File::isDirectory);
+                if (subdirs != null) {
+                    long now = System.currentTimeMillis();
+                    for (File sub : subdirs) {
+                        if (!sub.getName().endsWith(" EPUB") && !sub.getName().endsWith(" TXT")
+                                && !sub.getName().endsWith(" HTML") && !sub.getName().endsWith(" PDF"))
+                            continue;
+                        if (now - sub.lastModified() > TTL_MS) deleteRecursively(sub);
+                    }
+                }
             }
         }
+        // Also clean up soft-deleted users (30min after deletion was triggered)
+        try (java.sql.Connection c = com.pcdd.sonovel.db.DatabaseManager.getInstance().getConnection();
+             java.sql.Statement s = c.createStatement()) {
+            s.execute("DELETE FROM users WHERE deleted_at>0 AND deleted_at<" + (System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(30)));
+        } catch (Exception ignored) {}
     }
 
     private static void deleteRecursively(File f) {

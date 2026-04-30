@@ -164,6 +164,8 @@ public class UserRepository {
                 .salt(rs.getString("salt"))
                 .role(rs.getString("role"))
                 .banned(rs.getInt("banned"))
+                .lastIp(rs.getString("last_ip"))
+                .deletedAt(rs.getLong("deleted_at"))
                 .createdAt(rs.getLong("created_at"))
                 .updatedAt(rs.getLong("updated_at"))
                 .build();

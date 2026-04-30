@@ -160,6 +160,10 @@ public class DatabaseManager {
             // Migrate: add show_on_login and dismissable columns to announcements if missing
             try { stmt.execute("ALTER TABLE announcements ADD COLUMN show_on_login INTEGER NOT NULL DEFAULT 0"); } catch (Exception ignored) {}
             try { stmt.execute("ALTER TABLE announcements ADD COLUMN dismissable INTEGER NOT NULL DEFAULT 0"); } catch (Exception ignored) {}
+            // Migrate: add last_ip column to users for IP tracking
+            try { stmt.execute("ALTER TABLE users ADD COLUMN last_ip TEXT DEFAULT ''"); } catch (Exception ignored) {}
+            // Migrate: add deleted_at column for soft-delete (30min delay)
+            try { stmt.execute("ALTER TABLE users ADD COLUMN deleted_at INTEGER DEFAULT 0"); } catch (Exception ignored) {}
         }
     }
 

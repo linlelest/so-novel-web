@@ -18,6 +18,8 @@ public class AuthUser {
     private String salt;
     private String role;       // "admin" or "user"
     private Integer banned;    // 0=正常, 1=封禁
+    private String lastIp;
+    private Long deletedAt; // >0 = marked for deletion
     private Long createdAt;
     private Long updatedAt;
 
