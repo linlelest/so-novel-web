@@ -40,7 +40,10 @@ public class AuthServlet extends HttpServlet {
         String ip = getIp(req);
         if(AuthFilter.isIpBanned(ip)) { RespUtils.writeError(resp,403,"IP已被封禁。"+configRepo.get("contact_info")); return; }
         AuthUser user = userRepo.findByUsername(u);
-        if(user==null) { RespUtils.writeError(resp,401,"用户名或密码错误"); return; }
+        if(user==null) {
+            if(AuthFilter.isUserDeleted(u)) { RespUtils.writeError(resp,410,"您的账户已被删除，"+configRepo.get("contact_info")); return; }
+            RespUtils.writeError(resp,401,"用户名或密码错误"); return;
+        }
         if(user.isBanned()) { RespUtils.writeError(resp,403,"账号已被封禁，"+configRepo.get("contact_info")); return; }
         if(!userRepo.verifyPassword(user,pw)) { RespUtils.writeError(resp,401,"用户名或密码错误"); return; }
         String sid = AuthFilter.createSession(user.getId(),user.getUsername(),user.getRole());

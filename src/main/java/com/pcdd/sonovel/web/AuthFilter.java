@@ -120,9 +120,27 @@ public class AuthFilter implements Filter {
             SessionData sd = getSession(sid);
             if (sd != null) {
                 AuthUser u = userRepo.findById(sd.userId());
-                if (u != null && u.isBanned()) { destroySession(sid);
-                    resp.setStatus(403); resp.setContentType("application/json;charset=UTF-8");
-                    resp.getWriter().println(JSONUtil.toJsonStr(JsonResponse.error(403,"账号已被封禁，"+configRepo.get("contact_info")))); return; }
+                if (u == null) {
+                    // User was deleted from DB — session invalid, block access
+                    destroySession(sid);
+                    String contact = configRepo.get("contact_info");
+                    if (shouldRedirect(req)) {
+                        resp.sendRedirect("/login.html?reason=deleted");
+                    } else {
+                        resp.setStatus(403); resp.setContentType("application/json;charset=UTF-8");
+                        resp.getWriter().println(JSONUtil.toJsonStr(JsonResponse.error(403,"您的账户已被删除，"+contact)));
+                    }
+                    return;
+                }
+                if (u.isBanned()) { destroySession(sid);
+                    String contact = configRepo.get("contact_info");
+                    if (shouldRedirect(req)) {
+                        resp.sendRedirect("/login.html?reason=banned");
+                    } else {
+                        resp.setStatus(403); resp.setContentType("application/json;charset=UTF-8");
+                        resp.getWriter().println(JSONUtil.toJsonStr(JsonResponse.error(403,"账号已被封禁，"+contact)));
+                    }
+                    return; }
                 // If token explicitly provided, validate it even with valid session
                 String token = req.getParameter("token");
                 if (token != null) {
@@ -214,6 +232,14 @@ public class AuthFilter implements Filter {
         try (Connection c = com.pcdd.sonovel.db.DatabaseManager.getInstance().getConnection();
              PreparedStatement ps = c.prepareStatement("SELECT 1 FROM ip_blacklist WHERE ip=? AND expires_at>?")) {
             ps.setString(1,ip); ps.setLong(2,System.currentTimeMillis()); return ps.executeQuery().next();
+        } catch(Exception e){ return false; }
+    }
+
+    /** Check if a username was deleted (exists in banned_users_log with action='delete') */
+    public static boolean isUserDeleted(String username) {
+        try (Connection c = com.pcdd.sonovel.db.DatabaseManager.getInstance().getConnection();
+             PreparedStatement ps = c.prepareStatement("SELECT 1 FROM banned_users_log WHERE username=? AND action='delete'")) {
+            ps.setString(1, username); return ps.executeQuery().next();
         } catch(Exception e){ return false; }
     }
 }
