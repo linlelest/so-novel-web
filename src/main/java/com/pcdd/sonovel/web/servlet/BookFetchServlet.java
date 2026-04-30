@@ -1,15 +1,10 @@
 package com.pcdd.sonovel.web.servlet;
 
-import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.lang.Console;
 import cn.hutool.core.util.StrUtil;
 import com.pcdd.sonovel.core.AppConfigLoader;
-import com.pcdd.sonovel.core.Crawler;
 import com.pcdd.sonovel.db.HistoryRepository;
-import com.pcdd.sonovel.model.AppConfig;
 import com.pcdd.sonovel.model.Rule;
-import com.pcdd.sonovel.model.SearchResult;
-import com.pcdd.sonovel.parse.BookParser;
 import com.pcdd.sonovel.util.SourceUtils;
 import com.pcdd.sonovel.web.util.RespUtils;
 import jakarta.servlet.http.HttpServlet;
@@ -18,6 +13,10 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.util.Set;
 
+/**
+ * 书籍获取 API — 仅在服务器 downloads 目录中查找已有文件并返回路径，
+ * 不再重新爬取源站。下载工作由原版后端下载器完成。
+ */
 public class BookFetchServlet extends HttpServlet {
 
     private static final Set<String> ALLOWED_FORMATS = Set.of("epub", "txt", "html", "pdf");
@@ -31,88 +30,51 @@ public class BookFetchServlet extends HttpServlet {
             String bookUrl = req.getParameter("url");
             String format = req.getParameter("format");
             String language = req.getParameter("language");
-            String concurrencyStr = req.getParameter("concurrency");
-            int id = SourceUtils.getRule(bookUrl).getId();
 
             if (StrUtil.isNotBlank(format) && !ALLOWED_FORMATS.contains(format.toLowerCase())) {
-                RespUtils.writeError(resp, 400, "不支持的下载格式: " + format + "，可选: epub, txt, html, pdf");
+                RespUtils.writeError(resp, 400, "不支持的下载格式: " + format);
                 return;
             }
-
             if (StrUtil.isNotBlank(language) && !ALLOWED_LANGUAGES.contains(language.toLowerCase())) {
-                RespUtils.writeError(resp, 400, "不支持的语言: " + language + "，可选: zh_CN, zh_TW, zh_Hant");
+                RespUtils.writeError(resp, 400, "不支持的语言: " + language);
                 return;
             }
 
-            Integer concurrency = null;
-            if (StrUtil.isNotBlank(concurrencyStr)) {
-                concurrency = Integer.parseInt(concurrencyStr);
-                int configConcurrency = AppConfigLoader.APP_CONFIG.getConcurrency();
-                int maxAllowed = configConcurrency > 0 ? configConcurrency : 50;
-                if (concurrency < 1 || concurrency > maxAllowed) {
-                    RespUtils.writeError(resp, 400, "并发数须在 1~" + maxAllowed + " 之间");
-                    return;
-                }
-            }
-
-            SearchResult sr = SearchResult.builder().sourceId(id).url(bookUrl).build();
-            Rule rule = SourceUtils.getRule(bookUrl);
             String finalFormat = StrUtil.isNotBlank(format) ? format.toLowerCase() : AppConfigLoader.APP_CONFIG.getExtName();
+            Rule rule = SourceUtils.getRule(bookUrl);
+            String bookName = req.getParameter("bookName");
+            String author = req.getParameter("author");
 
-            // First: check if download already exists (using bookName+author from request params)
-            String lookupName = req.getParameter("bookName");
-            String lookupAuthor = req.getParameter("author");
-            java.util.Map<String, Object> existing = null;
-            if (lookupName != null && !lookupName.isBlank()) {
-                existing = findExistingDownload(lookupName, lookupAuthor, finalFormat);
-            }
-            if (existing != null) {
-                // File already exists — return it directly, also record history if not already recorded
-                String bookName = (String) existing.get("bookName");
-                String author = (String) existing.get("author");
-                String actualFileName = (String) existing.get("fileName");
-                long fileSize = (long) existing.get("fileSize");
-                try {
-                    Integer userId = (Integer) req.getAttribute("userId");
-                    String username = (String) req.getAttribute("username");
-                    if (userId != null && username != null) {
-                        historyRepository.add(userId, bookName, author, rule.getName(), finalFormat, actualFileName, fileSize);
-                        historyRepository.addLog(username, bookName, author, finalFormat, rule.getName());
-                    }
-                } catch (Exception ignored) {}
-                var result = new java.util.HashMap<String, Object>();
-                result.put("message", "文件已存在，下载完成");
-                result.put("timeSeconds", 0);
-                result.put("fileName", actualFileName);
-                RespUtils.writeJson(resp, result);
+            if (bookName == null || bookName.isBlank()) {
+                RespUtils.writeError(resp, 400, "缺少 bookName 参数");
                 return;
             }
 
-            // Not found locally — download from source
-            java.util.Map<String, Object> dlResult = downloadFileToServer(sr, format, language, concurrency, rule);
-            if (dlResult == null) {
-                RespUtils.writeError(resp, 500, "源站章节目录为空，中止下载");
+            // Find file in downloads directory
+            java.util.Map<String, Object> found = findExistingDownload(bookName, author, finalFormat);
+            if (found == null) {
+                RespUtils.writeError(resp, 404, "文件不存在，请先在原版下载器中下载");
                 return;
             }
-            double totalTimeSeconds = (double) dlResult.get("timeSeconds");
-            String bookName = (String) dlResult.getOrDefault("bookName", "未知书名");
-            String author = (String) dlResult.getOrDefault("author", "");
-            String actualFileName = (String) dlResult.getOrDefault("fileName", "");
-            long fileSize = (long) dlResult.getOrDefault("fileSize", 0L);
+
+            String actualFileName = (String) found.get("fileName");
+            long fileSize = (long) found.get("fileSize");
 
             // Record download history
             try {
                 Integer userId = (Integer) req.getAttribute("userId");
                 String username = (String) req.getAttribute("username");
                 if (userId != null && username != null) {
-                    historyRepository.add(userId, bookName, author, rule.getName(), finalFormat, actualFileName, fileSize);
-                    historyRepository.addLog(username, bookName, author, finalFormat, rule.getName());
+                    historyRepository.add(userId, bookName, author != null ? author : "",
+                            rule.getName(), finalFormat, actualFileName, fileSize);
+                    historyRepository.addLog(username, bookName, author != null ? author : "",
+                            finalFormat, rule.getName());
                 }
             } catch (Exception ignored) {}
 
             var result = new java.util.HashMap<String, Object>();
             result.put("message", "下载完成");
-            result.put("timeSeconds", totalTimeSeconds);
+            result.put("timeSeconds", 0);
             result.put("fileName", actualFileName);
             RespUtils.writeJson(resp, result);
 
@@ -121,62 +83,13 @@ public class BookFetchServlet extends HttpServlet {
         }
     }
 
-    private java.util.Map<String, Object> downloadFileToServer(SearchResult sr, String format, String language, Integer concurrency, Rule rule) {
-        AppConfig cfg = BeanUtil.copyProperties(AppConfigLoader.APP_CONFIG, AppConfig.class);
-        cfg.setSourceId(sr.getSourceId());
-        if (StrUtil.isNotBlank(format)) cfg.setExtName(format.toLowerCase());
-        if (StrUtil.isNotBlank(language)) cfg.setLanguage(language);
-        if (concurrency != null) cfg.setConcurrency(concurrency);
-        cfg.setWebEnabled(1);
-
-        Console.log("<== 正在获取源站章节目录...");
-        Crawler crawler = new Crawler(cfg);
-        double timeSeconds = crawler.crawl(sr.getUrl());
-        if (timeSeconds == 0) return null;
-
-        // Get output directory (same pattern Crawler uses)
-        String downloadPath = cfg.getDownloadPath();
-        String ext = cfg.getExtName().toUpperCase();
-        // List subdirectories in download path sorted by modification time (newest first)
-        java.io.File[] subdirs = new java.io.File(downloadPath)
-                .listFiles(f -> f.isDirectory() && f.getName().endsWith(" " + ext));
-        if (subdirs == null || subdirs.length == 0) {
-            subdirs = new java.io.File(downloadPath).listFiles(java.io.File::isDirectory);
-        }
-        if (subdirs == null || subdirs.length == 0) return null;
-        java.util.Arrays.sort(subdirs, (a, b) -> Long.compare(b.lastModified(), a.lastModified()));
-        java.io.File dir = subdirs[0];
-        String dirName = dir.getName(); // e.g. "凡人修仙传 (忘语) EPUB"
-        // Parse bookName and author from dir name: "书名 (作者) EXT"
-        String bookName = dirName, author = "";
-        int lp = dirName.lastIndexOf(" (");
-        int rp = dirName.lastIndexOf(") ");
-        if (lp > 0 && rp > lp) {
-            bookName = dirName.substring(0, lp);
-            author = dirName.substring(lp + 2, rp);
-        }
-
-        // Find the final output file and return relative path
-        java.io.File[] files = dir.listFiles((d, n) -> n.endsWith("." + ext.toLowerCase()));
-        String relFileName = (files != null && files.length > 0) ? (dirName + "/" + files[0].getName()) : "";
-        long fileSize = (files != null && files.length > 0) ? files[0].length() : 0L;
-
-        java.util.Map<String, Object> result = new java.util.HashMap<>();
-        result.put("timeSeconds", timeSeconds);
-        result.put("bookName", bookName);
-        result.put("author", author);
-        result.put("fileName", relFileName);
-        result.put("fileSize", fileSize);
-        return result;
-    }
-
-    /** Search download directory for an existing file matching bookName + author + format */
+    /** Search download directory for a file matching bookName + format */
     private java.util.Map<String, Object> findExistingDownload(String bookName, String author, String fmt) {
         String ext = fmt.toUpperCase();
         java.io.File dlDir = new java.io.File(AppConfigLoader.APP_CONFIG.getDownloadPath());
         java.io.File[] allDirs = dlDir.listFiles(java.io.File::isDirectory);
         if (allDirs == null) return null;
-        // Try exact match first, then partial match
+
         for (java.io.File sub : allDirs) {
             String name = sub.getName();
             if (!name.endsWith(" " + ext)) continue;
@@ -184,15 +97,11 @@ public class BookFetchServlet extends HttpServlet {
             if (author != null && !author.isEmpty() && !name.contains(author)) continue;
             java.io.File[] files = sub.listFiles((d, n) -> n.endsWith("." + fmt));
             if (files == null || files.length == 0) continue;
-            String fn = name + "/" + files[0].getName();
             java.util.Map<String, Object> r = new java.util.HashMap<>();
-            r.put("bookName", bookName);
-            r.put("author", author != null ? author : "");
-            r.put("fileName", fn);
+            r.put("fileName", name + "/" + files[0].getName());
             r.put("fileSize", files[0].length());
             return r;
         }
         return null;
     }
-
 }
