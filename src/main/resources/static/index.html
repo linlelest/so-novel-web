@@ -121,7 +121,8 @@ var item=e.target.closest('[data-f]');if(item){item.closest('.da').classList.rem
 document.addEventListener('click',function(){document.querySelectorAll('.da.open').forEach(function(el){el.classList.remove('open')})});
 async function hdts(idx,fmt){var item=bookCache[idx];if(!item){t('参数错误','e');return}showLoad('准备下载...');
 var p=new URLSearchParams(item);var fmt2=fmt||$('sf').value||'';if(fmt2)p.set('format',fmt2);if($('sl').value)p.set('language',$('sl').value);if($('sc').value)p.set('concurrency',$('sc').value);
-try{var r=await fetch('/book-fetch?'+p.toString());var d=await r.json();var data=gd(d);if(!r.ok||d.code!==200){t(d.message||'失败','e');hideLoad()}else{var fn=data.fileName||'';$('loadT').textContent='下载完成！';setTimeout(function(){hideLoad();if(fn){var ifr=document.createElement('iframe');ifr.style.display='none';ifr.src='/book-download?filename='+encodeURIComponent(fn);document.body.appendChild(ifr)}flb()},800)}}catch(e){t('下载失败','e');hideLoad()}}
+var dlid=String(Math.floor(Math.random()*900000000)+100000000);p.set('dlid',dlid);
+try{var r=await fetch('/book-fetch?'+p.toString());var d=await r.json();var data=gd(d);if(!r.ok||d.code!==200){t(d.message||'失败','e');hideLoad()}else{$('loadT').textContent='下载完成！';setTimeout(function(){hideLoad();var ifr=document.createElement('iframe');ifr.style.display='none';ifr.src='/book-download?dlid='+dlid;document.body.appendChild(ifr);flb()},800)}}catch(e){t('下载失败','e');hideLoad()}}
 
 // Local books
 async function flb(){showLoad('正在刷新...');try{var r=await fetch('/local-books');var d=gd(await r.json());if(d&&d.length){d.sort(function(a,b){return b.timestamp-a.timestamp});if(d[0])lastFN=d[0].name;renderLB(d)}}catch(e){}finally{hideLoad()}}
