@@ -102,10 +102,8 @@ public class AuthFilter implements Filter {
                 }
             }
             // Block non-admin: browser→redirect, API→501 JSON
-            if (shouldRedirect(req)) {
-                resp.sendRedirect("/maintenance.html");
-            } else {
-                resp.setStatus(501);
+            if (shouldRedirect(req)) { htmlRedirect(resp, "/maintenance.html"); }
+            else { resp.setStatus(501);
                 resp.setContentType("application/json;charset=UTF-8");
                 resp.getWriter().println(JSONUtil.toJsonStr(JsonResponse.error(501, "正在维护中")));
             }
@@ -124,30 +122,23 @@ public class AuthFilter implements Filter {
                     // User was deleted — session invalid, block access
                     destroySession(sid);
                     String contact = configRepo.get("contact_info");
-                    if (shouldRedirect(req)) {
-                        resp.sendRedirect("/login.html?reason=deleted");
-                    } else {
-                        resp.setStatus(403); resp.setContentType("application/json;charset=UTF-8");
-                        resp.getWriter().println(JSONUtil.toJsonStr(JsonResponse.error(403,"您的账户已被删除，"+contact)));
-                    }
+                    if (shouldRedirect(req)) { htmlRedirect(resp, "/login.html?reason=deleted"); }
+                    else { resp.setStatus(403); resp.setContentType("application/json;charset=UTF-8");
+                        resp.getWriter().println(JSONUtil.toJsonStr(JsonResponse.error(403,"您的账户已被删除，"+contact))); }
                     return;
                 }
                 if (u.isBanned()) { destroySession(sid);
                     String contact = configRepo.get("contact_info");
-                    if (shouldRedirect(req)) {
-                        resp.sendRedirect("/login.html?reason=banned");
-                    } else {
-                        resp.setStatus(403); resp.setContentType("application/json;charset=UTF-8");
-                        resp.getWriter().println(JSONUtil.toJsonStr(JsonResponse.error(403,"账号已被封禁，"+contact)));
-                    }
+                    if (shouldRedirect(req)) { htmlRedirect(resp, "/login.html?reason=banned"); }
+                    else { resp.setStatus(403); resp.setContentType("application/json;charset=UTF-8");
+                        resp.getWriter().println(JSONUtil.toJsonStr(JsonResponse.error(403,"账号已被封禁，"+contact))); }
                     return; }
                 // If token explicitly provided, validate it even with valid session
                 String token = req.getParameter("token");
                 if (token != null) {
                     Integer uid = tokenRepo.findUserIdByToken(token);
                     if (uid == null || !uid.equals(sd.userId())) {
-                        // Token doesn't exist or belongs to different user → reject
-                        if (shouldRedirect(req)) { resp.sendRedirect("/login.html"); }
+                        if (shouldRedirect(req)) { htmlRedirect(resp, "/login.html"); }
                         else { resp.setStatus(401); resp.setContentType("application/json;charset=UTF-8");
                             resp.getWriter().println(JSONUtil.toJsonStr(JsonResponse.error(401,"Token无效或不存在"))); }
                         return;
@@ -163,8 +154,7 @@ public class AuthFilter implements Filter {
         if (token != null) {
             Integer uid = tokenRepo.findUserIdByToken(token);
             if (uid == null) {
-                // Token doesn't exist → reject immediately with 401
-                if (shouldRedirect(req)) { resp.sendRedirect("/login.html"); }
+                if (shouldRedirect(req)) { htmlRedirect(resp, "/login.html"); }
                 else { resp.setStatus(401); resp.setContentType("application/json;charset=UTF-8");
                     resp.getWriter().println(JSONUtil.toJsonStr(JsonResponse.error(401,"Token无效或不存在"))); }
                 return;
@@ -241,5 +231,13 @@ public class AuthFilter implements Filter {
              PreparedStatement ps = c.prepareStatement("SELECT 1 FROM banned_users_log WHERE username=? AND action='delete'")) {
             ps.setString(1, username); return ps.executeQuery().next();
         } catch(Exception e){ return false; }
+    }
+
+    /** Write HTML page that immediately redirects using both meta refresh and JavaScript (bypasses caching/extension issues) */
+    private void htmlRedirect(HttpServletResponse resp, String url) throws IOException {
+        resp.setContentType("text/html;charset=UTF-8");
+        resp.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+        resp.setHeader("Pragma", "no-cache");
+        resp.getWriter().print("<!DOCTYPE html><html><head><meta charset='UTF-8'><meta http-equiv='refresh' content='0;url=" + url + "'><script>location.replace('" + url + "');</script></head><body></body></html>");
     }
 }

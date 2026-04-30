@@ -59,7 +59,36 @@ public class BookFetchServlet extends HttpServlet {
             Rule rule = SourceUtils.getRule(bookUrl);
             String finalFormat = StrUtil.isNotBlank(format) ? format.toLowerCase() : AppConfigLoader.APP_CONFIG.getExtName();
 
-            // Execute download with SSE progress, get back output directory path
+            // First: check if download already exists (using bookName+author from request params)
+            String lookupName = req.getParameter("bookName");
+            String lookupAuthor = req.getParameter("author");
+            java.util.Map<String, Object> existing = null;
+            if (lookupName != null && !lookupName.isBlank()) {
+                existing = findExistingDownload(lookupName, lookupAuthor, finalFormat);
+            }
+            if (existing != null) {
+                // File already exists — return it directly, also record history if not already recorded
+                String bookName = (String) existing.get("bookName");
+                String author = (String) existing.get("author");
+                String actualFileName = (String) existing.get("fileName");
+                long fileSize = (long) existing.get("fileSize");
+                try {
+                    Integer userId = (Integer) req.getAttribute("userId");
+                    String username = (String) req.getAttribute("username");
+                    if (userId != null && username != null) {
+                        historyRepository.add(userId, bookName, author, rule.getName(), finalFormat, actualFileName, fileSize);
+                        historyRepository.addLog(username, bookName, author, finalFormat, rule.getName());
+                    }
+                } catch (Exception ignored) {}
+                var result = new java.util.HashMap<String, Object>();
+                result.put("message", "文件已存在，下载完成");
+                result.put("timeSeconds", 0);
+                result.put("fileName", actualFileName);
+                RespUtils.writeJson(resp, result);
+                return;
+            }
+
+            // Not found locally — download from source
             java.util.Map<String, Object> dlResult = downloadFileToServer(sr, format, language, concurrency, rule);
             if (dlResult == null) {
                 RespUtils.writeError(resp, 500, "源站章节目录为空，中止下载");
@@ -139,6 +168,23 @@ public class BookFetchServlet extends HttpServlet {
         result.put("fileName", relFileName);
         result.put("fileSize", fileSize);
         return result;
+    }
+
+    /** Search download directory for an existing file matching bookName + author + format */
+    private java.util.Map<String, Object> findExistingDownload(String bookName, String author, String fmt) {
+        String dirPattern = com.pcdd.sonovel.util.FileUtils.sanitizeFileName(
+                "%s (%s) %s".formatted(bookName, author != null ? author : "", fmt.toUpperCase()));
+        java.io.File dir = new java.io.File(AppConfigLoader.APP_CONFIG.getDownloadPath(), dirPattern);
+        if (!dir.isDirectory()) return null;
+        java.io.File[] files = dir.listFiles((d, n) -> n.endsWith("." + fmt));
+        if (files == null || files.length == 0) return null;
+        String fn = dir.getName() + "/" + files[0].getName();
+        java.util.Map<String, Object> r = new java.util.HashMap<>();
+        r.put("bookName", bookName);
+        r.put("author", author != null ? author : "");
+        r.put("fileName", fn);
+        r.put("fileSize", files[0].length());
+        return r;
     }
 
 }

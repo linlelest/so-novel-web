@@ -29,6 +29,16 @@ public class LocalBookListServlet extends HttpServlet {
             String fn = h.getFileName();
             if (fn == null || fn.isEmpty()) continue;
             File f = new File(dir, fn);
+            // For bare filenames (old records), search subdirectories
+            if (!f.exists() && !fn.contains("/") && !fn.contains("\\")) {
+                File[] subs = dir.listFiles(File::isDirectory);
+                if (subs != null) {
+                    for (File sub : subs) {
+                        File candidate = new File(sub, fn);
+                        if (candidate.exists()) { f = candidate; fn = sub.getName() + "/" + fn; break; }
+                    }
+                }
+            }
             if (f.exists()) {
                 LocalBookItem item = new LocalBookItem();
                 item.setName(fn);
