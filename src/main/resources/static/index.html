@@ -31,7 +31,7 @@ table{width:100%;border-collapse:collapse}th,td{padding:6px 8px;text-align:left;
 .load-overlay{display:flex;position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.7);align-items:center;justify-content:center;flex-direction:column}.load-overlay .lo-spin{width:48px;height:48px;border:4px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}.load-overlay .lo-txt{color:#fff;font-size:1rem;margin-top:14px}@keyframes spin{to{transform:rotate(360deg)}}
 @media(max-width:768px){.hdr{position:static;transform:none;margin-top:6px;justify-content:center;flex-wrap:wrap}.hd h1{font-size:1.8rem}.wrap{padding:10px}.search{flex-direction:column}.search .btn{width:100%}}
 </style></head><body>
-<script>if(document.cookie.indexOf('logged_in=')<0)location.replace('/login.html')</script>
+<script>if(document.cookie.indexOf('logged_in=')<0)location.replace('/login.html');window.onpageshow=function(e){if(e.persisted&&document.cookie.indexOf('logged_in=')<0)location.replace('/login.html')}</script>
 <div class="wrap" id="mainWrap" style="display:none">
 <div class="hd"><div style="text-align:left;margin-bottom:4px"><span class="ui"><span class="un" id="dun"></span><span id="drole"></span></span></div>
 <h1 style="margin:0;color:var(--primary);font-size:2.5rem;letter-spacing:2px">SO NOVEL</h1><a id="vtag" class="vtag" target="_blank">version</a>
@@ -121,7 +121,7 @@ var item=e.target.closest('[data-f]');if(item){item.closest('.da').classList.rem
 document.addEventListener('click',function(){document.querySelectorAll('.da.open').forEach(function(el){el.classList.remove('open')})});
 async function hdts(idx,fmt){var item=bookCache[idx];if(!item){t('参数错误','e');return}showLoad('准备下载...');
 var p=new URLSearchParams(item);var fmt2=fmt||$('sf').value||'';if(fmt2)p.set('format',fmt2);if($('sl').value)p.set('language',$('sl').value);if($('sc').value)p.set('concurrency',$('sc').value);
-try{var r=await fetch('/book-fetch?'+p.toString());var d=await r.json();if(!r.ok||d.code!==200){t(d.message||'失败','e');hideLoad()}else{$('loadT').textContent='下载完成！正在获取文件...';setTimeout(function(){flb().then(function(){var fn=lastFN;if(fn){var ifr=document.createElement('iframe');ifr.style.display='none';ifr.src='/book-download?filename='+encodeURIComponent(fn);document.body.appendChild(ifr)}})},1000)}}catch(e){t('下载失败','e');hideLoad()}}
+try{var r=await fetch('/book-fetch?'+p.toString());var d=await r.json();if(!r.ok||d.code!==200){t(d.message||'失败','e');hideLoad()}else{$('loadT').textContent='下载完成！正在刷新列表...';setTimeout(async function(){await flb();/* fetch latest file from /local-books and auto-download */try{var r2=await fetch('/local-books?_='+Date.now());var list=gd(await r2.json());if(list&&list.length){list.sort(function(a,b){return b.timestamp-a.timestamp});var fn=list[0].name;if(fn){var ifr=document.createElement('iframe');ifr.style.display='none';ifr.src='/book-download?filename='+encodeURIComponent(fn);document.body.appendChild(ifr)}}}catch(e){}hideLoad()},800)}}catch(e){t('下载失败','e');hideLoad()}}
 
 // Local books
 async function flb(){showLoad('正在刷新...');try{var r=await fetch('/local-books');var d=gd(await r.json());if(d&&d.length){d.sort(function(a,b){return b.timestamp-a.timestamp});if(d[0])lastFN=d[0].name;renderLB(d)}}catch(e){}finally{hideLoad()}}
