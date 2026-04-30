@@ -172,19 +172,27 @@ public class BookFetchServlet extends HttpServlet {
 
     /** Search download directory for an existing file matching bookName + author + format */
     private java.util.Map<String, Object> findExistingDownload(String bookName, String author, String fmt) {
-        String dirPattern = com.pcdd.sonovel.util.FileUtils.sanitizeFileName(
-                "%s (%s) %s".formatted(bookName, author != null ? author : "", fmt.toUpperCase()));
-        java.io.File dir = new java.io.File(AppConfigLoader.APP_CONFIG.getDownloadPath(), dirPattern);
-        if (!dir.isDirectory()) return null;
-        java.io.File[] files = dir.listFiles((d, n) -> n.endsWith("." + fmt));
-        if (files == null || files.length == 0) return null;
-        String fn = dir.getName() + "/" + files[0].getName();
-        java.util.Map<String, Object> r = new java.util.HashMap<>();
-        r.put("bookName", bookName);
-        r.put("author", author != null ? author : "");
-        r.put("fileName", fn);
-        r.put("fileSize", files[0].length());
-        return r;
+        String ext = fmt.toUpperCase();
+        java.io.File dlDir = new java.io.File(AppConfigLoader.APP_CONFIG.getDownloadPath());
+        java.io.File[] allDirs = dlDir.listFiles(java.io.File::isDirectory);
+        if (allDirs == null) return null;
+        // Try exact match first, then partial match
+        for (java.io.File sub : allDirs) {
+            String name = sub.getName();
+            if (!name.endsWith(" " + ext)) continue;
+            if (!name.contains(bookName)) continue;
+            if (author != null && !author.isEmpty() && !name.contains(author)) continue;
+            java.io.File[] files = sub.listFiles((d, n) -> n.endsWith("." + fmt));
+            if (files == null || files.length == 0) continue;
+            String fn = name + "/" + files[0].getName();
+            java.util.Map<String, Object> r = new java.util.HashMap<>();
+            r.put("bookName", bookName);
+            r.put("author", author != null ? author : "");
+            r.put("fileName", fn);
+            r.put("fileSize", files[0].length());
+            return r;
+        }
+        return null;
     }
 
 }
