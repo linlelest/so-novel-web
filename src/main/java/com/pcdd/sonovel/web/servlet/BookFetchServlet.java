@@ -112,10 +112,9 @@ public class BookFetchServlet extends HttpServlet {
         java.io.File[] subdirs = new java.io.File(downloadPath)
                 .listFiles(f -> f.isDirectory() && f.getName().endsWith(" " + ext));
         if (subdirs == null || subdirs.length == 0) {
-            // Fallback: grab most recently modified directory
-            subdirs = new java.io.File(downloadPath)
-                    .listFiles(java.io.File::isDirectory);
+            subdirs = new java.io.File(downloadPath).listFiles(java.io.File::isDirectory);
         }
+        if (subdirs == null || subdirs.length == 0) return null;
         java.util.Arrays.sort(subdirs, (a, b) -> Long.compare(b.lastModified(), a.lastModified()));
         java.io.File dir = subdirs[0];
         String dirName = dir.getName(); // e.g. "凡人修仙传 (忘语) EPUB"
@@ -128,16 +127,16 @@ public class BookFetchServlet extends HttpServlet {
             author = dirName.substring(lp + 2, rp);
         }
 
-        // Find the final output file
+        // Find the final output file and return relative path
         java.io.File[] files = dir.listFiles((d, n) -> n.endsWith("." + ext.toLowerCase()));
-        String fileName = (files != null && files.length > 0) ? files[0].getName() : "";
+        String relFileName = (files != null && files.length > 0) ? (dirName + "/" + files[0].getName()) : "";
         long fileSize = (files != null && files.length > 0) ? files[0].length() : 0L;
 
         java.util.Map<String, Object> result = new java.util.HashMap<>();
         result.put("timeSeconds", timeSeconds);
         result.put("bookName", bookName);
         result.put("author", author);
-        result.put("fileName", fileName);
+        result.put("fileName", relFileName);
         result.put("fileSize", fileSize);
         return result;
     }

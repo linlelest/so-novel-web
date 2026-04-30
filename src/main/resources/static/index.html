@@ -162,9 +162,8 @@ $('loBtn').addEventListener('click',async function(){await fetch('/api/auth/logo
 
 // SSE 下载进度
 function initSSE(){var es=new EventSource('/download-progress');es.onmessage=function(e){try{var d=JSON.parse(e.data);if(d.type==='download-progress'){$('loadT').textContent=d.index+' / '+d.total}}catch(err){}}}
-initSSE();
 
 // Init
-ca().then(function(s){if(!s)return;ls();fc();flb();la();lbl();$('mainWrap').style.display=''});
+ca().then(function(s){if(!s)return;ls();fc();flb();la();lbl();initSSE();$('mainWrap').style.display=''});
 // Click guard: any action requiring auth redirects to login if not authenticated
 document.addEventListener('click',function(e){if(!cu&&e.target.closest('.hdr-btn,.btn-p,button')){e.preventDefault();e.stopPropagation();window.location.href='/login.html'}},true);</script></body></html>
