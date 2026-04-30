@@ -121,7 +121,7 @@ var item=e.target.closest('[data-f]');if(item){item.closest('.da').classList.rem
 document.addEventListener('click',function(){document.querySelectorAll('.da.open').forEach(function(el){el.classList.remove('open')})});
 async function hdts(idx,fmt){var item=bookCache[idx];if(!item){t('参数错误','e');return}showLoad('准备下载...');
 var p=new URLSearchParams(item);var fmt2=fmt||$('sf').value||'';if(fmt2)p.set('format',fmt2);if($('sl').value)p.set('language',$('sl').value);if($('sc').value)p.set('concurrency',$('sc').value);
-try{var r=await fetch('/book-fetch?'+p.toString());var d=await r.json();if(!r.ok||d.code!==200){t(d.message||'失败','e');hideLoad()}else{$('loadT').textContent='下载完成！正在刷新列表...';setTimeout(async function(){await flb();/* fetch latest file from /local-books and auto-download */try{var r2=await fetch('/local-books?_='+Date.now());var list=gd(await r2.json());if(list&&list.length){list.sort(function(a,b){return b.timestamp-a.timestamp});var fn=list[0].name;if(fn){var ifr=document.createElement('iframe');ifr.style.display='none';ifr.src='/book-download?filename='+encodeURIComponent(fn);document.body.appendChild(ifr)}}}catch(e){}hideLoad()},800)}}catch(e){t('下载失败','e');hideLoad()}}
+try{var r=await fetch('/book-fetch?'+p.toString());var d=await r.json();var data=gd(d);if(!r.ok||d.code!==200){t(d.message||'失败','e');hideLoad()}else{var fn=data.fileName||'';$('loadT').textContent='下载完成！';setTimeout(function(){hideLoad();if(fn){var ifr=document.createElement('iframe');ifr.style.display='none';ifr.src='/book-download?filename='+encodeURIComponent(fn);document.body.appendChild(ifr)}flb()},800)}}catch(e){t('下载失败','e');hideLoad()}}
 
 // Local books
 async function flb(){showLoad('正在刷新...');try{var r=await fetch('/local-books');var d=gd(await r.json());if(d&&d.length){d.sort(function(a,b){return b.timestamp-a.timestamp});if(d[0])lastFN=d[0].name;renderLB(d)}}catch(e){}finally{hideLoad()}}
@@ -159,7 +159,7 @@ if(list.length>1){html+='<details style="margin-top:4px"><summary style="cursor:
 $('banList').innerHTML=html}catch(e){}}
 
 // Logout
-$('loBtn').addEventListener('click',async function(){await fetch('/api/auth/logout',{method:'POST'});window.location.href='/login.html'});
+$('loBtn').addEventListener('click',async function(){try{await fetch('/api/auth/logout',{method:'POST'})}catch(e){}window.location.href='/login.html'});
 
 // SSE 下载进度
 function initSSE(){var es=new EventSource('/download-progress');es.onmessage=function(e){try{var d=JSON.parse(e.data);if(d.type==='download-progress'){$('loadT').textContent=d.index+' / '+d.total}}catch(err){}}}
