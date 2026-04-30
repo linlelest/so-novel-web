@@ -62,8 +62,7 @@ public class BookFetchServlet extends HttpServlet {
             String au = req.getParameter("author");
             java.io.File[] dirs = dlDir.listFiles(f -> f.isDirectory() && f.getName().endsWith(" " + ext));
             java.io.File outDir = null;
-            if (dirs != null) {
-                // Sort newest first, but prefer exact bookName match
+            if (dirs != null && dirs.length > 0) {
                 java.util.Arrays.sort(dirs, (a, b) -> Long.compare(b.lastModified(), a.lastModified()));
                 for (java.io.File d : dirs) {
                     String name = d.getName();
@@ -72,7 +71,7 @@ public class BookFetchServlet extends HttpServlet {
                     outDir = d;
                     break;
                 }
-                if (outDir == null) outDir = dirs[0]; // fallback
+                if (outDir == null) outDir = dirs[0]; // no name match → fallback to newest
             }
             if (outDir == null) {
                 RespUtils.writeError(resp, 500, "未找到下载文件");
