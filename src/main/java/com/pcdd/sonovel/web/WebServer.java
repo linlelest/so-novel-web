@@ -70,7 +70,6 @@ public class WebServer {
         context.addServlet(AuthServlet.class, "/api/auth/*");
         context.addServlet(TokenServlet.class, "/api/tokens");
         context.addServlet(AdminServlet.class, "/api/admin/*");
-        context.addServlet(HistoryServlet.class, "/api/history");
 
         // 公告
         context.addServlet(AnnouncementServlet.class, "/api/announcements/*");

@@ -1,6 +1,6 @@
 # SoNovel 服务端 API 文档 v2.0
 
-> 本文档适用于 SoNovel 服务端改版。原版项目的 CLI/TUI 功能不受影响。
+> 本文档适用于 SoNovel 服务端改版。
 
 ---
 
@@ -13,10 +13,9 @@
 5. [书籍下载 API](#5-书籍下载-api)
 6. [文件下载 API](#6-文件下载-api)
 7. [本地书籍列表 API](#7-本地书籍列表-api)
-8. [下载历史 API](#8-下载历史-api)
-9. [服务器配置 API](#9-服务器配置-api)
-10. [管理员 API](#10-管理员-api)
-11. [完整调用示例](#11-完整调用示例)
+8. [服务器配置 API](#8-服务器配置-api)
+9. [管理员 API](#9-管理员-api)
+10. [完整调用示例](#9-完整调用示例)
 
 ---
 
@@ -449,38 +448,9 @@ GET /local-books?token=xxx
 
 ---
 
-## 8. 下载历史 API
+## 8. 服务器配置 API
 
-### 8.1 获取当前用户的下载历史
-
-```
-GET /api/history?token=xxx
-```
-
-**需要认证**（建议使用 Token）。
-
-**响应示例：**
-```json
-{
-  "code": 200,
-  "message": "OK",
-  "data": [
-    {
-      "id": 1,
-      "bookName": "凡人修仙传",
-      "author": "忘语",
-      "format": "epub",
-      "createdAt": 1714000000000
-    }
-  ]
-}
-```
-
----
-
-## 9. 服务器配置 API
-
-### 9.1 获取服务器配置
+### 8.1 获取服务器配置
 
 ```
 GET /config?token=xxx
@@ -506,11 +476,11 @@ GET /config?token=xxx
 
 ---
 
-## 10. 管理员 API
+## 9. 管理员 API
 
 所有管理员 API **需要管理员权限**（Session Cookie 或 Token 必须属于管理员账号）。
 
-### 10.1 获取用户列表
+### 9.1 获取用户列表
 
 ```
 GET /api/admin/users?token=xxx
@@ -567,7 +537,7 @@ Content-Type: application/json
 }
 ```
 
-### 10.3 获取下载日志（全局）
+### 9.3 获取下载日志（全局）
 
 ```
 GET /api/admin/logs?token=xxx
@@ -594,7 +564,7 @@ GET /api/admin/logs?token=xxx
 
 ---
 
-## 11. 完整调用示例
+## 10. 完整调用示例
 
 ### Python 示例
 

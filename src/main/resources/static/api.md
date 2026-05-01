@@ -372,9 +372,10 @@ GET /book-fetch?url=https://...&format=epub&token=xxx
 | format | 否 | 下载格式：epub/txt/html/pdf，默认使用服务器配置 |
 | language | 否 | 语言：zh_CN/zh_TW/zh_Hant |
 | concurrency | 否 | 下载并发数，不超过服务器配置 |
+| dlid | 否 | 下载追踪ID（9位数字），不传则自动生成 |
 | token | 是* | API Token（非浏览器访问时必填） |
 
-下载完成后，文件保存在服务器配置的下载目录中。可使用 `/book-download` 接口将文件下载到本地。
+下载完成后，文件保存在服务器下载目录中。返回的 `dlid` 可用于 `/book-download` 接口下载。
 
 **响应示例：**
 ```json
@@ -383,7 +384,9 @@ GET /book-fetch?url=https://...&format=epub&token=xxx
   "message": "OK",
   "data": {
     "message": "下载完成",
-    "timeSeconds": 12.34
+    "timeSeconds": 12.34,
+    "dlid": "358291047",
+    "fileName": "凡人修仙传(忘语).epub"
   }
 }
 ```
@@ -395,14 +398,21 @@ GET /book-fetch?url=https://...&format=epub&token=xxx
 ### 6.1 从服务器下载文件到本地
 
 ```
-GET /book-download?filename=书名.epub&token=xxx
+GET /book-download?dlid=358291047&token=xxx
+```
+
+或使用传统文件名方式：
+
+```
+GET /book-download?filename=凡人修仙传(忘语).epub&token=xxx
 ```
 
 **需要认证**（建议使用 Token）。
 
 | 参数 | 必填 | 说明 |
 |------|------|------|
-| filename | 是 | 文件名（从本地书籍列表获取） |
+| dlid | 二选一 | 下载追踪ID（从 /book-fetch 响应获取，用后即失效） |
+| filename | 二选一 | 文件名（从本地书籍列表获取） |
 | token | 是* | API Token（非浏览器访问时必填） |
 
 该接口返回二进制文件流。
@@ -439,38 +449,9 @@ GET /local-books?token=xxx
 
 ---
 
-## 8. 下载历史 API
+## 8. 服务器配置 API
 
-### 8.1 获取当前用户的下载历史
-
-```
-GET /api/history?token=xxx
-```
-
-**需要认证**（建议使用 Token）。
-
-**响应示例：**
-```json
-{
-  "code": 200,
-  "message": "OK",
-  "data": [
-    {
-      "id": 1,
-      "bookName": "凡人修仙传",
-      "author": "忘语",
-      "format": "epub",
-      "createdAt": 1714000000000
-    }
-  ]
-}
-```
-
----
-
-## 9. 服务器配置 API
-
-### 9.1 获取服务器配置
+### 8.1 获取服务器配置
 
 ```
 GET /config?token=xxx
@@ -496,11 +477,11 @@ GET /config?token=xxx
 
 ---
 
-## 10. 管理员 API
+## 9. 管理员 API
 
 所有管理员 API **需要管理员权限**（Session Cookie 或 Token 必须属于管理员账号）。
 
-### 10.1 获取用户列表
+### 9.1 获取用户列表
 
 ```
 GET /api/admin/users?token=xxx
@@ -557,7 +538,7 @@ Content-Type: application/json
 }
 ```
 
-### 10.3 获取下载日志（全局）
+### 9.3 获取下载日志（全局）
 
 ```
 GET /api/admin/logs?token=xxx
@@ -584,7 +565,7 @@ GET /api/admin/logs?token=xxx
 
 ---
 
-## 11. 完整调用示例
+## 10. 完整调用示例
 
 ### Python 示例
 
@@ -609,7 +590,19 @@ if books:
         f"{BASE_URL}/book-fetch",
         params={"url": book["url"], "format": "epub", "token": TOKEN}
     )
-    print(f"下载结果: {download_resp.json()}")
+    result = download_resp.json()
+    dlid = result.get("data", {}).get("dlid", "")
+    print(f"下载结果: {result}")
+
+    # 用 dlid 下载文件到本地
+    if dlid:
+        file_resp = requests.get(
+            f"{BASE_URL}/book-download",
+            params={"dlid": dlid, "token": TOKEN}, stream=True
+        )
+        with open("downloaded.epub", "wb") as f:
+            for chunk in file_resp.iter_content(): f.write(chunk)
+        print("文件已保存到本地")
 
 # 查看下载历史
 history = requests.get(f"{BASE_URL}/api/history", params={"token": TOKEN})
@@ -624,6 +617,8 @@ curl "http://your-server:7765/search/aggregated?kw=凡人修仙传&token=sonovel
 
 # 下载
 curl "http://your-server:7765/book-fetch?url=https://example.com/book/123&format=epub&token=sonovel_xxxxx"
+# 响应包含 dlid，用它下载文件到本地
+curl -o 文件.epub "http://your-server:7765/book-download?dlid=358291047&token=sonovel_xxxxx"
 
 # 查看历史
 curl "http://your-server:7765/api/history?token=sonovel_xxxxx"
