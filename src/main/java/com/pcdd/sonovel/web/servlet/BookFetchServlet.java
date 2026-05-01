@@ -39,9 +39,6 @@ public class BookFetchServlet extends HttpServlet {
             if (StrUtil.isNotBlank(language) && !ALLOWED_LANGUAGES.contains(language.toLowerCase())) {
                 RespUtils.writeError(resp, 400, "不支持的语言"); return;
             }
-            if (StrUtil.isBlank(dlid)) {
-                RespUtils.writeError(resp, 400, "缺少 dlid 参数"); return;
-            }
 
             int id = SourceUtils.getRule(bookUrl).getId();
             SearchResult sr = SearchResult.builder().sourceId(id).url(bookUrl).build();
