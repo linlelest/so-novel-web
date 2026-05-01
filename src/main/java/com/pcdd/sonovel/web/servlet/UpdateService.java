@@ -25,6 +25,7 @@ public class UpdateService {
     private static final ConfigRepository configRepo = new ConfigRepository();
     private static final String URL = "https://api.github.com/repos/linlelest/so-novel-web/releases";
     private static volatile int updateProgress = 0; // 0-100
+    public static int getProgress() { return updateProgress; }
 
     /**
      * 检查是否有新版本
