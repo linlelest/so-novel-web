@@ -62,15 +62,13 @@ public class UpdateService {
         Console.log("[update] 已开启维护模式");
 
         String os = System.getProperty("os.name", "").toLowerCase();
-
-        String os = System.getProperty("os.name", "").toLowerCase();
         String workDir = System.getProperty("user.dir");
         String proxy = configRepo.get("gh_update_proxy");
+        boolean ok;
 
         if (os.contains("win")) {
             String dlUrl = getLatestDownloadUrl("windows_x64");
-            if (dlUrl == null) return false;
-            // Apply proxy prefix only for download (not for check)
+            if (dlUrl == null) { updateProgress = 0; configRepo.set("update_in_progress", "false"); return false; }
             if (proxy != null && !proxy.isBlank()) {
                 dlUrl = proxy.replaceAll("/+$", "") + "/" + dlUrl;
                 Console.log("[update] 使用代理下载: {}", dlUrl);
@@ -84,12 +82,10 @@ public class UpdateService {
             p.waitFor();
             Files.deleteIfExists(tmp);
             Console.log("[update] Windows 更新完成，exitCode={}", p.exitValue());
-            return p.exitValue() == 0;
-        }
-        updateProgress = 100;
-        configRepo.set("update_in_progress", "false"); else {
+            ok = p.exitValue() == 0;
+        } else {
             String dlUrl = getLatestDownloadUrl("linux_x64");
-            if (dlUrl == null) return false;
+            if (dlUrl == null) { updateProgress = 0; configRepo.set("update_in_progress", "false"); return false; }
             if (proxy != null && !proxy.isBlank()) {
                 dlUrl = proxy.replaceAll("/+$", "") + "/" + dlUrl;
                 Console.log("[update] 使用代理下载: {}", dlUrl);
@@ -97,15 +93,18 @@ public class UpdateService {
             Path script = Paths.get(workDir, "update.sh");
             if (!Files.exists(script)) {
                 Console.error("[update] update.sh 不存在: {}", script);
-                return false;
+                updateProgress = 0; configRepo.set("update_in_progress", "false"); return false;
             }
             Process p = new ProcessBuilder("bash", script.toString(), dlUrl)
                     .directory(new File(workDir)).start();
             String out = IoUtil.readUtf8(p.getInputStream());
             Console.log("[update] {}", out);
-            return p.waitFor() == 0;
+            ok = p.waitFor() == 0;
         }
-    }
+
+        updateProgress = ok ? 100 : 0;
+        configRepo.set("update_in_progress", "false");
+        return ok;
 
     /**
      * 简单语义化版本比较。v1.0.0 → [1,0,0]，逐段比较
