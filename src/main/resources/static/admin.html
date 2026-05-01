@@ -127,7 +127,7 @@ $('dm').addEventListener('click',function(e){if(e.target===this)this.classList.r
 
 // Config
 async function lcfg(){try{var r=await fetch('/api/admin/config');var cfg=gd(await r.json());var html='';
-var labels={contact_info:'管理员联系方式\n(封禁/删除时显示给用户)',gh_update_proxy:'GitHub更新代理前缀\n(仅下载时使用，如：https://cdn.gh-proxy.org/)',api_search_rate:'API搜索速率\n(次数/秒)',api_download_rate:'API下载速率\n(次数/秒)',web_search_rate:'Web搜索速率\n(次数/秒)',web_download_rate:'Web下载速率\n(次数/秒)',web_visit_rate:'Web访问速率\n(次数/秒)'};
+var labels={contact_info:'管理员联系方式\n(封禁/删除时显示给用户)',gh_update_proxy:'GitHub更新代理前缀\n(仅下载时使用，如：https://cdn.gh-proxy.org/)',api_search_rate:'API搜索速率\n(次数/秒)',api_download_rate:'API下载速率\n(次数/秒)',web_search_rate:'Web搜索速率\n(次数/秒)',web_download_rate:'Web下载速率\n(次数/秒)',web_visit_rate:'Web访问速率\n(次数/秒)',max_concurrent_downloads:'最大并发下载数\n(同时下载本数)'};
 for(var k in labels){var val=cfg[k]||'';html+='<div class="fg"><label>'+labels[k].replace(/\n/g,'<br>')+'</label><div style="display:flex;gap:6px"><input type="text" value="'+val+'" data-key="'+k+'" style="flex:1"><button class="btn-p" onclick="saveCfg(\''+k+'\',this.previousElementSibling.value)" style="width:60px;margin:0;font-size:.75rem">保存</button></div></div>'}$('cfgGrid').innerHTML=html;$('cl').style.display='none';$('cw').style.display='block'}catch(e){$('cl').textContent='失败'}}
 window.saveCfg=async function(k,v){try{var r=await fetch('/api/admin/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'config',key:k,value:v})});if(r.ok)t('已保存')}catch(e){alert('失败')}};
 

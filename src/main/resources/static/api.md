@@ -1,6 +1,6 @@
 # SoNovel 服务端 API 文档 v2.0
 
-> 本文档适用于 SoNovel 服务端改版。原版项目的 CLI/TUI 功能不受影响。
+> 本文档适用于 SoNovel 服务端改版。
 
 ---
 
@@ -13,10 +13,9 @@
 5. [书籍下载 API](#5-书籍下载-api)
 6. [文件下载 API](#6-文件下载-api)
 7. [本地书籍列表 API](#7-本地书籍列表-api)
-8. [下载历史 API](#8-下载历史-api)
-9. [服务器配置 API](#9-服务器配置-api)
-10. [管理员 API](#10-管理员-api)
-11. [完整调用示例](#11-完整调用示例)
+8. [服务器配置 API](#8-服务器配置-api)
+9. [管理员 API](#9-管理员-api)
+10. [完整调用示例](#9-完整调用示例)
 
 ---
 
@@ -389,6 +388,44 @@ GET /book-fetch?url=https://...&format=epub&token=xxx
     "fileName": "凡人修仙传(忘语).epub"
   }
 }
+```
+
+### 5.2 实时接收下载进度（SSE）
+
+```
+GET /download-progress?token=xxx
+```
+
+**需要认证**（建议使用 Token）。该接口返回 SSE（Server-Sent Events）流，每下载约 5 章推送一次进度。
+
+| 参数 | 必填 | 说明 |
+|------|------|------|
+| token | 是* | API Token（非浏览器访问时必填） |
+
+**SSE 事件格式：**
+```json
+{"type":"download-progress","index":5,"total":100}
+```
+
+| 字段 | 说明 |
+|------|------|
+| type | 固定为 `download-progress` |
+| index | 当前已下载章数 |
+| total | 总章数 |
+
+**Python 示例：**
+```python
+import requests
+import json
+
+TOKEN = "sonovel_xxxxx"
+resp = requests.get("http://server:7765/download-progress",
+                     params={"token": TOKEN}, stream=True)
+for line in resp.iter_lines():
+    if line and line.startswith(b"data: "):
+        data = json.loads(line[6:])
+        if data.get("type") == "download-progress":
+            print(f"进度: {data['index']}/{data['total']}")
 ```
 
 ---

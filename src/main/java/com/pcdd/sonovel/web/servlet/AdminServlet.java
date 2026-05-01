@@ -142,6 +142,7 @@ public class AdminServlet extends HttpServlet {
         map.put("web_search_rate",configRepo.get("web_search_rate"));
         map.put("web_download_rate",configRepo.get("web_download_rate"));
         map.put("web_visit_rate",configRepo.get("web_visit_rate"));
+        map.put("max_concurrent_downloads",configRepo.get("max_concurrent_downloads"));
         RespUtils.writeJson(resp, map);
     }
 

@@ -1,5 +1,7 @@
 package com.pcdd.sonovel.web.servlet;
 
+import cn.hutool.json.JSONObject;
+import cn.hutool.json.JSONUtil;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,77 +14,67 @@ import java.util.concurrent.ConcurrentHashMap;
 public class DownloadProgressSseServlet extends HttpServlet {
 
     private static final Set<AsyncContext> clients = ConcurrentHashMap.newKeySet();
+    private static final ConcurrentHashMap<String, JSONObject> states = new ConcurrentHashMap<>();
 
+    /** Register a download by dlid (bookName from BookFetchServlet) */
+    public static void register(String dlid, String bookName) {
+        states.put(dlid, JSONUtil.createObj()
+                .set("dlid", dlid).set("bookName", bookName).set("index", 0).set("total", 0));
+    }
+    public static void unregister(String dlid) { states.remove(dlid); }
+
+    /** Called by Crawler — parse progress, merge with state, broadcast list */
     public static void sendProgress(String json) {
-        byte[] bytes = ("data: " + json + "\n\n").getBytes();
+        JSONObject incoming = JSONUtil.parseObj(json);
+        if (!"download-progress".equals(incoming.getStr("type"))) return;
+        // Find matching state by index/total (dlid unknown to Crawler, match by most recent zero-progress entry)
+        for (var entry : states.entrySet()) {
+            JSONObject s = entry.getValue();
+            if (s.getLong("index") == 0) {
+                s.set("index", incoming.getLong("index"));
+                s.set("total", incoming.getLong("total"));
+                break;
+            }
+        }
+        broadcast();
+    }
 
+    private static void broadcast() {
+        String json = JSONUtil.toJsonStr(JSONUtil.createObj()
+                .set("type", "download-progress")
+                .set("downloads", states.values()));
+        byte[] bytes = ("data: " + json + "\n\n").getBytes();
         for (AsyncContext ctx : clients) {
             try {
-                // 关键点：使用 synchronized 确保单 client 消息顺序并处理连接状态
                 synchronized (ctx) {
                     ServletResponse resp = ctx.getResponse();
-                    if (resp != null) {
-                        ServletOutputStream out = resp.getOutputStream();
-                        out.write(bytes);
-                        out.flush(); // 强制推送进度数据
-                    } else {
-                        clients.remove(ctx);
-                    }
+                    if (resp != null) resp.getOutputStream().write(bytes);
+                    else clients.remove(ctx);
                 }
-            } catch (Exception e) {
-                clients.remove(ctx);
-                try {
-                    ctx.complete();
-                } catch (Exception ignored) {
-                }
-            }
+            } catch (Exception e) { clients.remove(ctx); try { ctx.complete(); } catch (Exception ignored) {} }
         }
     }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        // 1. 先设置 Header
         resp.setStatus(HttpServletResponse.SC_OK);
         resp.setContentType("text/event-stream;charset=UTF-8");
         resp.setHeader("Cache-Control", "no-cache");
         resp.setHeader("Connection", "keep-alive");
         resp.setHeader("X-Accel-Buffering", "no");
 
-        // 2. 开启异步
         AsyncContext asyncContext = req.startAsync();
         asyncContext.setTimeout(0);
-
-        // 注册监听器
         asyncContext.addListener(new AsyncListener() {
-            @Override
-            public void onComplete(AsyncEvent event) {
-                clients.remove(asyncContext);
-            }
-
-            @Override
-            public void onError(AsyncEvent event) {
-                clients.remove(asyncContext);
-            }
-
-            @Override
-            public void onStartAsync(AsyncEvent event) {
-            }
-
-            @Override
-            public void onTimeout(AsyncEvent event) {
-                clients.remove(asyncContext);
-                event.getAsyncContext().complete();
-            }
+            public void onComplete(AsyncEvent event) { clients.remove(asyncContext); }
+            public void onError(AsyncEvent event) { clients.remove(asyncContext); }
+            public void onStartAsync(AsyncEvent event) {}
+            public void onTimeout(AsyncEvent event) { clients.remove(asyncContext); event.getAsyncContext().complete(); }
         });
-
-        // 3. 获取输出流并建立连接
-        ServletOutputStream out = resp.getOutputStream();
         clients.add(asyncContext);
-
-        // 指定浏览器重新发起连接的时间间隔
+        ServletOutputStream out = resp.getOutputStream();
         out.write("retry: 10000\n".getBytes());
         out.write(": connected\n\n".getBytes());
         out.flush();
     }
-
 }

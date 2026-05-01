@@ -156,6 +156,7 @@ public class DatabaseManager {
             stmt.execute("INSERT OR IGNORE INTO sys_config VALUES ('web_visit_rate', '60/60')");
             stmt.execute("INSERT OR IGNORE INTO sys_config VALUES ('invite_code_enabled', 'false')");
             stmt.execute("INSERT OR IGNORE INTO sys_config VALUES ('invite_code_prompt', '需要邀请码才能注册，请联系管理员获取。')");
+            stmt.execute("INSERT OR IGNORE INTO sys_config VALUES ('max_concurrent_downloads', '3')");
 
             // Migrate: add show_on_login and dismissable columns to announcements if missing
             try { stmt.execute("ALTER TABLE announcements ADD COLUMN show_on_login INTEGER NOT NULL DEFAULT 0"); } catch (Exception ignored) {}
