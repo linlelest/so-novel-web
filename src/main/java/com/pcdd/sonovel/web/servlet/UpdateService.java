@@ -105,6 +105,7 @@ public class UpdateService {
         updateProgress = ok ? 100 : 0;
         configRepo.set("update_in_progress", "false");
         return ok;
+    }
 
     /**
      * 简单语义化版本比较。v1.0.0 → [1,0,0]，逐段比较
