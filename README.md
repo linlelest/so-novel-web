@@ -134,3 +134,6 @@ mvn exec:java
 ## 许可证
 
 MIT · 基于 [freeok/so-novel](https://github.com/freeok/so-novel)
+
+## 友情链接
+[LinuxDo](https://linux.do)
