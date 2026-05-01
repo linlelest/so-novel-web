@@ -16,11 +16,16 @@ SoNovel Web 是在免费开源小说下载器 [SoNovel](https://github.com/freeo
 | 维度 | 原版 | 本改版 |
 |------|------|--------|
 | 启动方式 | CLI / TUI / WebUI | Web 服务端（Windows 有托盘 GUI） |
-| 用户系统 | 无 | 注册 / 登录 / 管理员 / 封禁 |
-| API 接口 | 无 | 完整 RESTful API（15+ 端点） |
+| 用户系统 | 无 | 注册 / 登录 / 管理员 / 封禁 / 删除 |
+| API 接口 | 无 | 完整 RESTful API（25+ 端点） |
 | Token 认证 | 无 | 可创建多个 Token，带备注，一键复制 |
-| 管理后台 | 无 | 用户管理 / 公告管理（MD 编辑器）/ 下载日志 |
-| 公告系统 | 无 | 多条公告，Markdown 渲染，置顶 |
+| 管理后台 | 无 | 用户管理 / 公告管理 / 下载日志 / 邀请码 / 系统配置 |
+| 公告系统 | 无 | 多条公告，Markdown 渲染，置顶，登录页弹窗 |
+| 邀请码系统 | 无 | 批量生成 / 使用次数限制 / 自动消耗 |
+| 并发控制 | 无 | 单本线程数量 + 多本同时下载上限 |
+| 下载进度 | 无 | SSE 实时推送下载进度（Web + API） |
+| 自动清理 | 无 | 下载文件 1 小时后自动删除 |
+| 程序更新 | 无 | 管理后台一键检查/下载更新（支持代理） |
 | 数据持久化 | 无 | SQLite 数据库 |
 | 部署方式 | 手动运行 | systemd + nginx 一键部署脚本 |
 
@@ -70,30 +75,12 @@ cd sonovel-linux_x64
 
 1. 访问登录页面 → 首次无管理员时自动进入管理员注册
 2. 注册管理员账号（密码 ≥ 6 位）
-3. 登录后可搜索和下载书籍
-4. 管理员在右上角进入"管理后台"，可管理用户、发布公告、查看下载日志
-5. 任意用户可在首页右上角"🔑 获取 Token"创建 API Token 供第三方程序调用
+3. 登录后可搜索和下载书籍（下载完成后浏览器自动弹出下载）
+4. 管理员在右上角进入"管理后台"，可管理用户、发布公告、生成邀请码、查看下载日志
+5. 任意用户可在首页右上角"🔑 Token"创建 API Token 供第三方程序调用
+6. 下载的文件在 1 小时后自动从服务器删除
 
 ## API 调用
-
-```python
-import requests
-
-BASE = "http://your-server:7765"
-TOKEN = "sonovel_xxxxx"  # 在 Web UI 右上角获取
-
-# 搜索
-r = requests.get(f"{BASE}/search/aggregated", params={"kw":"凡人修仙传","token":TOKEN})
-books = r.json()["data"]
-
-# 下载到服务器
-r = requests.get(f"{BASE}/book-fetch",
-    params={"url": books[0]["url"], "format":"epub", "token":TOKEN})
-
-# 查看下载历史
-r = requests.get(f"{BASE}/api/history", params={"token":TOKEN})
-```
-
 完整 API 文档 → [API.md](API.md)
 
 ## 项目结构（改版新增文件）
@@ -127,20 +114,11 @@ src/main/resources/static/
 ```
 
 原版文件仅 `Main.java`、`WebServer.java`、`pom.xml`、`index.html` 有少量修改。
+还有大量新增文件用于分发和管理服务，不影响原版功能。
 
 ## 与上游同步
 
-```bash
-git remote add upstream https://github.com/freeok/so-novel.git
-git fetch upstream
-git merge upstream/main
-
-# 冲突仅可能出现在：
-#   pom.xml          — SQLite 依赖
-#   Main.java        — 纯 Web 模式 + Windows 检测
-#   WebServer.java   — 新增 Servlet 注册
-#   index.html       — 认证 UI
-```
+Action页自动同步上游项目最新版本规则
 
 ## 开发
 

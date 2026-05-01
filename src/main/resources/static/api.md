@@ -550,7 +550,7 @@ GET /api/admin/users?token=xxx
 }
 ```
 
-### 10.2 封禁/解封用户
+### 9.2 封禁/解封用户
 
 ```
 POST /api/admin/users
@@ -575,7 +575,44 @@ Content-Type: application/json
 }
 ```
 
-### 9.3 获取下载日志（全局）
+### 9.4 更新检查
+
+```
+GET /api/admin/update?token=xxx
+```
+
+**需要管理员权限。**
+
+**响应示例：**
+```json
+{
+  "code": 200,
+  "data": {
+    "currentVersion": "v1.0.0",
+    "latestVersion": "v1.1.0",
+    "hasUpdate": true,
+    "url": "https://github.com/linlelest/so-novel-web/releases/tag/v1.1.0"
+  }
+}
+```
+
+### 9.5 执行更新
+
+```
+POST /api/admin/update?action=apply&token=xxx
+```
+
+**需要管理员权限**。执行时会自动开启维护模式并跳转到更新等待页。
+
+**响应示例：**
+```json
+{
+  "code": 200,
+  "data": { "success": true, "message": "更新已执行，服务重启中..." }
+}
+```
+
+### 9.6 获取下载日志（全局）
 
 ```
 GET /api/admin/logs?token=xxx
@@ -597,6 +634,81 @@ GET /api/admin/logs?token=xxx
       "createdAt": 1714000000000
     }
   ]
+}
+```
+
+### 9.7 邀请码管理
+
+**需要管理员权限**。
+
+#### 获取邀请码列表
+```
+GET /api/admin/invite-codes?token=xxx
+```
+
+#### 批量生成
+```
+POST /api/admin/users
+{"action":"invite-gen","count":10,"maxUses":1}
+```
+
+#### 删除邀请码
+```
+POST /api/admin/users
+{"action":"invite-del","id":1}
+```
+
+#### 批量删除
+```
+POST /api/admin/users
+{"action":"invite-batch-del","ids":[1,2,3]}
+```
+
+#### 邀请码开关及提示
+```
+POST /api/admin/users
+{"action":"invite-config","enabled":"true","prompt":"需要邀请码才能注册，请联系管理员获取"}
+```
+
+### 9.8 封号名单
+
+```
+GET /api/public/bannedlog
+```
+
+公开接口，无需认证。首页可见。
+
+---
+
+### 9.9 更新进度查询
+
+```
+GET /api/public/update-status
+```
+
+公开接口。程序更新时返回进度百分比。
+
+```json
+{
+  "code": 200,
+  "data": { "updating": true, "progress": 50 }
+}
+```
+
+---
+
+### 9.10 邀请状态查询
+
+```
+GET /api/public/invite-status
+```
+
+公开接口。检查邀请码系统是否开启。
+
+```json
+{
+  "code": 200,
+  "data": { "enabled": true, "prompt": "需要邀请码才能注册，请联系管理员获取" }
 }
 ```
 
