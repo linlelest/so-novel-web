@@ -52,8 +52,9 @@ public class BookFetchServlet extends HttpServlet {
             if (StrUtil.isNotBlank(concurrencyStr)) cfg.setConcurrency(Integer.parseInt(concurrencyStr));
             cfg.setWebEnabled(1);
 
-            // Snapshot existing files before download
+            // Ensure download directory exists
             java.io.File dlDir = new java.io.File(cfg.getDownloadPath());
+            dlDir.mkdirs();
             java.util.Set<String> preFiles = new java.util.HashSet<>();
             java.io.File[] existing = dlDir.listFiles(java.io.File::isFile);
             if (existing != null) for (java.io.File f : existing) preFiles.add(f.getName());
