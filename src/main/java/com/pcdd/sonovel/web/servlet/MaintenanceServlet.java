@@ -34,6 +34,13 @@ public class MaintenanceServlet extends HttpServlet {
             listBannedLog(resp);
             return;
         }
+        if (path.equals("/api/public/update-status")) {
+            JSONObject data = JSONUtil.createObj()
+                    .set("updating", "true".equals(configRepo.get("update_in_progress")))
+                    .set("progress", com.pcdd.sonovel.web.servlet.UpdateService.getProgress());
+            RespUtils.writeJson(resp, data);
+            return;
+        }
         if (path.equals("/api/public/invite-status")) {
             JSONObject data = JSONUtil.createObj()
                     .set("enabled", "true".equals(configRepo.get("invite_code_enabled")))

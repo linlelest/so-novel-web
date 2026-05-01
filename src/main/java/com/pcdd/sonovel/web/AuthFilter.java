@@ -101,9 +101,12 @@ public class AuthFilter implements Filter {
                     }
                 }
             }
-            // Block non-admin: browser→redirect, API→501 JSON
-            if (shouldRedirect(req)) { htmlRedirect(resp, "/maintenance.html"); }
-            else { resp.setStatus(501);
+            // Block non-admin: during update → updating.html, otherwise → maintenance.html
+            if (shouldRedirect(req)) {
+                String redirectPage = "true".equals(configRepo.get("update_in_progress")) ?
+                        "/updating.html" : "/maintenance.html";
+                htmlRedirect(resp, redirectPage);
+            } else { resp.setStatus(501);
                 resp.setContentType("application/json;charset=UTF-8");
                 resp.getWriter().println(JSONUtil.toJsonStr(JsonResponse.error(501, "正在维护中")));
             }
@@ -202,13 +205,13 @@ public class AuthFilter implements Filter {
         if (p.startsWith("/api/auth/")) return true; if (p.startsWith("/api/public/")) return true;
         if (p.startsWith("/api/announcements/")) return true;
         if (p.endsWith(".css")||p.endsWith(".js")||p.endsWith(".ico")||p.endsWith(".png")||p.endsWith(".svg")) return true;
-        if (p.equals("/login.html")||p.equals("/register.html")||p.equals("/maintenance.html")||p.equals("/api-docs.html")||p.equals("/api.md")) return true;
+        if (p.equals("/login.html")||p.equals("/register.html")||p.equals("/maintenance.html")||p.equals("/updating.html")||p.equals("/api-docs.html")||p.equals("/api.md")) return true;
         return false;
     }
     /** Paths permitted through AuthFilter during maintenance mode — login, static resources, public API only. */
     private boolean isMaintenanceSafePath(String p) {
         if (p.endsWith(".css")||p.endsWith(".js")||p.endsWith(".ico")||p.endsWith(".png")||p.endsWith(".svg")) return true;
-        if (p.equals("/login.html")||p.equals("/maintenance.html")||p.equals("/api-docs.html")||p.equals("/api.md")) return true;
+        if (p.equals("/login.html")||p.equals("/maintenance.html")||p.equals("/updating.html")||p.equals("/api-docs.html")||p.equals("/api.md")) return true;
         if (p.equals("/api/auth/login")||p.equals("/api/auth/check")||p.equals("/api/auth/check-admin")) return true;
         if (p.startsWith("/api/public/")) return true;
         if (p.startsWith("/api/announcements/")) return true;

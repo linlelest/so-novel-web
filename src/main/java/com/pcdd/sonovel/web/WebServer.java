@@ -86,6 +86,7 @@ public class WebServer {
         context.addServlet(MaintenanceServlet.class, "/api/public/maintenance");
         context.addServlet(MaintenanceServlet.class, "/api/public/bannedlog");
         context.addServlet(MaintenanceServlet.class, "/api/public/invite-status");
+        context.addServlet(MaintenanceServlet.class, "/api/public/update-status");
 
         // 默认 Servlet 提供静态文件
         ServletHolder staticHolder = new ServletHolder("default", DefaultServlet.class);

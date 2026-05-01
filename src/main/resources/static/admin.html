@@ -127,7 +127,7 @@ $('dm').addEventListener('click',function(e){if(e.target===this)this.classList.r
 
 // Config
 async function lcfg(){try{var r=await fetch('/api/admin/config');var cfg=gd(await r.json());var html='';
-var labels={contact_info:'管理员联系方式\n(封禁/删除时显示给用户)',gh_update_proxy:'GitHub更新代理前缀\n(仅下载时使用，如：https://cdn.gh-proxy.org/)',api_search_rate:'API搜索速率\n(次数/秒)',api_download_rate:'API下载速率\n(次数/秒)',web_search_rate:'Web搜索速率\n(次数/秒)',web_download_rate:'Web下载速率\n(次数/秒)',web_visit_rate:'Web访问速率\n(次数/秒)',max_concurrent_downloads:'最大并发下载数\n(同时下载本数)'};
+var labels={contact_info:'管理员联系方式\n(封禁/删除时显示给用户)',gh_update_proxy:'GitHub更新代理前缀\n(仅下载时使用，如：https://cdn.gh-proxy.org/)',api_search_rate:'API搜索速率\n(次数/秒)',api_download_rate:'API单本下载线程数量\n(并发数)',web_search_rate:'Web搜索速率\n(次数/秒)',web_download_rate:'Web下载速率\n(次数/秒)',web_visit_rate:'Web访问速率\n(次数/秒)',max_concurrent_downloads:'API多本同时下载速率\n(同时下载本数)'};
 for(var k in labels){var val=cfg[k]||'';html+='<div class="fg"><label>'+labels[k].replace(/\n/g,'<br>')+'</label><div style="display:flex;gap:6px"><input type="text" value="'+val+'" data-key="'+k+'" style="flex:1"><button class="btn-p" onclick="saveCfg(\''+k+'\',this.previousElementSibling.value)" style="width:60px;margin:0;font-size:.75rem">保存</button></div></div>'}$('cfgGrid').innerHTML=html;$('cl').style.display='none';$('cw').style.display='block'}catch(e){$('cl').textContent='失败'}}
 window.saveCfg=async function(k,v){try{var r=await fetch('/api/admin/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'config',key:k,value:v})});if(r.ok)t('已保存')}catch(e){alert('失败')}};
 
@@ -139,7 +139,7 @@ async function checkUpd(){
   el.innerHTML='当前: <b>'+d.currentVersion+'</b> | 最新: <b>'+d.latestVersion+'</b>'+(d.hasUpdate?'<br><span style="color:var(--danger)">🔄 有新版本！</span> <a href="'+d.url+'" target="_blank" style="color:var(--primary)">查看</a>':'  ✅ 已是最新');
   upHasUpdate=d.hasUpdate;$('upApply').style.display=d.hasUpdate?'inline-block':'none'}catch(e){$('upInfo').textContent='检查失败'}}
 $('upBtn').addEventListener('click',function(){$('upInfo').textContent='检查中...';checkUpd()});
-$('upApply').addEventListener('click',function(){if(!confirm('确认执行更新？服务会重启！'))return;$('upInfo').textContent='更新中...';fetch('/api/admin/update?action=apply',{method:'POST'}).then(function(r){return r.json()}).then(function(d){var dd=gd(d);$('upInfo').textContent=dd.message||'更新完成'}).catch(function(){$('upInfo').textContent='更新失败'})});
+$('upApply').addEventListener('click',function(){if(!confirm('确认执行更新？服务会重启！'))return;$('upInfo').innerHTML='<div>更新中... <span id="upPct">0%</span></div><div class="progress-wrap" style="width:100%;height:6px;background:var(--ts);border-radius:3px;margin:8px 0"><div class="progress-bar" id="upBar" style="height:100%;background:var(--primary);border-radius:3px;width:0;transition:width .3s"></div></div>';fetch('/api/admin/update?action=apply',{method:'POST'}).then(function(r){return r.json()}).then(function(d){var dd=gd(d);$('upInfo').textContent=dd.message||'更新完成'}).catch(function(){$('upInfo').textContent='更新失败'});(function poll(){fetch('/api/public/update-status?_='+Date.now()).then(function(r){return r.json()}).then(function(d){var dd=gd(d);var el=document.getElementById('upBar');if(el){el.style.width=dd.progress+'%';document.getElementById('upPct').textContent=dd.progress+'%'}if(dd.updating)setTimeout(poll,2000)}).catch(function(){})})()});
 
 // Maintenance mode
 var maintEnabled=false;

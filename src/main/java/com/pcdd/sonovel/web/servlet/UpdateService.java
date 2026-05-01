@@ -24,6 +24,7 @@ public class UpdateService {
 
     private static final ConfigRepository configRepo = new ConfigRepository();
     private static final String URL = "https://api.github.com/repos/linlelest/so-novel-web/releases";
+    private static volatile int updateProgress = 0; // 0-100
 
     /**
      * 检查是否有新版本
@@ -55,8 +56,12 @@ public class UpdateService {
      * 执行更新：开启维护模式 → 下载 → 解压覆盖 → Linux 下重启
      */
     public static boolean applyUpdate() throws Exception {
+        updateProgress = 0;
         configRepo.set("maintenance_mode", "true");
+        configRepo.set("update_in_progress", "true");
         Console.log("[update] 已开启维护模式");
+
+        String os = System.getProperty("os.name", "").toLowerCase();
 
         String os = System.getProperty("os.name", "").toLowerCase();
         String workDir = System.getProperty("user.dir");
@@ -80,7 +85,9 @@ public class UpdateService {
             Files.deleteIfExists(tmp);
             Console.log("[update] Windows 更新完成，exitCode={}", p.exitValue());
             return p.exitValue() == 0;
-        } else {
+        }
+        updateProgress = 100;
+        configRepo.set("update_in_progress", "false"); else {
             String dlUrl = getLatestDownloadUrl("linux_x64");
             if (dlUrl == null) return false;
             if (proxy != null && !proxy.isBlank()) {
