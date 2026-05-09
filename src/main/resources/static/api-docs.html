@@ -38,7 +38,7 @@ function md2html(tx){if(!tx)return'<p style="color:var(--ts)">(空)</p>';var h=t
 h=h.replace(/```(\w*)\n([\s\S]*?)```/g,'<pre><code>$2</code></pre>');h=h.replace(/```([\s\S]*?)```/g,'<pre><code>$1</code></pre>');
 h=h.replace(/^### (.+)$/gm,function(m,t){var id=t.replace(/[^\w\u4e00-\u9fff]+/g,'-').replace(/^-+|-+$/g,'').toLowerCase();return'<h3 id="'+id+'">'+t+'</h3>'});h=h.replace(/^## (.+)$/gm,function(m,t){var id=t.replace(/[^\w\u4e00-\u9fff]+/g,'-').replace(/^-+|-+$/g,'').toLowerCase();return'<h2 id="'+id+'">'+t+'</h2>'});h=h.replace(/^# (.+)$/gm,function(m,t){var id=t.replace(/[^\w\u4e00-\u9fff]+/g,'-').replace(/^-+|-+$/g,'').toLowerCase();return'<h1 id="'+id+'">'+t+'</h1>'});
 h=h.replace(/^>\s(.+)$/gm,'<blockquote>$1</blockquote>');h=h.replace(/`([^`]+)`/g,'<code>$1</code>');
-h=h.replace(/\[([^\]]+)\]\(([^)]+)\)/g,function(m,t,u){return u.startsWith('#')?'<a href="'+u+'">'+t+'</a>':'<a href="'+u+'" target="_blank">'+t+'</a>'});
+h=h.replace(/\[([^\]]+)\]\(([^)]+)\)/g,function(m,t,u){return u.startsWith('#')?'<a href="'+location.pathname+u+'">'+t+'</a>':'<a href="'+u+'" target="_blank">'+t+'</a>'});
 h=h.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');h=h.replace(/\*([^*]+)\*/g,'<em>$1</em>');
 h=h.replace(/^- (.+)$/gm,'<li>$1</li>').replace(/(<li>.*<\/li>\n?)+/g,'<ul>$&</ul>');
 h=h.replace(/^\d+\.\s(.+)$/gm,'<li>$1</li>');
